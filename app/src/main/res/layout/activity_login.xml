@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:gravity="center_horizontal"
+    android:background="@drawable/screen_bg">
+
+    <!-- Top spacing -->
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="48dp" />
+
+    <!-- Illustration -->
+    <ImageView
+        android:id="@+id/coins_image"
+        android:layout_width="380dp"
+        android:layout_height="380dp"
+        android:src="@drawable/cash_payment"
+        android:contentDescription="@string/app_name"
+        android:layout_gravity="center_horizontal"/>
+
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="32dp" />
+
+    <!-- Welcome Text -->
+    <TextView
+        android:id="@+id/welcome_text"
+        android:layout_width="380dp"
+        android:layout_height="80dp"
+        android:text="Welcome, Let’s get you set up"
+        android:textColor="@color/text_primary"
+        android:textStyle="bold"
+        android:textSize="24sp"
+        android:gravity="center"
+        android:layout_gravity="center_horizontal"/>
+
+    <!-- Description Text -->
+    <TextView
+        android:id="@+id/description_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="We’ll guide you through in seconds."
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        android:gravity="center"
+        android:layout_marginTop="8dp"
+        android:layout_gravity="center_horizontal"/>
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="48dp" />
+
+    <!-- Continue to Login Button -->
+    <Button
+        android:id="@+id/btn_continue_login"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_marginLeft="24dp"
+        android:layout_marginRight="24dp"
+        android:layout_marginBottom="32dp"
+        android:background="@drawable/rounded_button_bg"
+        android:text="CONTINUE TO LOGIN"
+        android:textAllCaps="true"
+        android:textColor="@color/white"
+        app:backgroundTint="@color/button_green" />
+
+</LinearLayout>
