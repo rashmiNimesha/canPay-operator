@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:background="@drawable/screen_bg"
+    android:padding="24dp">
+
+    <!-- Back Arrow Button -->
+    <ImageButton
+        android:id="@+id/btn_back"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@drawable/ic_back_circle_bg"
+        android:src="@drawable/ic_back_arrow"
+        android:contentDescription="Back"
+        android:layout_gravity="start"
+        android:scaleType="center"
+        app:tint="@color/button_green"/>
+
+    <!-- Title -->
+    <TextView
+        android:id="@+id/tv_otp_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Check your text messages"
+        android:textColor="@color/text_primary"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginTop="32dp"/>
+
+    <!-- Subtitle -->
+    <TextView
+        android:id="@+id/tv_otp_subtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="A code was sent to 07XXXXXXXX."
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        android:layout_marginTop="8dp"/>
+
+    <!-- OTP Boxes -->
+    <LinearLayout
+        android:id="@+id/otp_container"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="32dp"
+        android:layout_marginBottom="32dp">
+
+        <EditText
+            android:id="@+id/otp1"
+            android:layout_width="48dp"
+            android:layout_height="56dp"
+            android:background="@drawable/otp_edittext_bg"
+            android:gravity="center"
+            android:textSize="24sp"
+            android:inputType="number"
+            android:maxLength="1"
+            android:padding="0dp"
+            android:textColor="@color/text_primary"
+            android:textCursorDrawable="@null"
+            android:layout_marginEnd="8dp"/>
+
+        <EditText
+            android:id="@+id/otp2"
+            android:layout_width="48dp"
+            android:layout_height="56dp"
+            android:background="@drawable/otp_edittext_bg"
+            android:gravity="center"
+            android:textSize="24sp"
+            android:inputType="number"
+            android:maxLength="1"
+            android:padding="0dp"
+            android:textColor="@color/text_primary"
+            android:textCursorDrawable="@null"
+            android:layout_marginEnd="8dp"/>
+
+        <EditText
+            android:id="@+id/otp3"
+            android:layout_width="48dp"
+            android:layout_height="56dp"
+            android:background="@drawable/otp_edittext_bg"
+            android:gravity="center"
+            android:textSize="24sp"
+            android:inputType="number"
+            android:maxLength="1"
+            android:padding="0dp"
+            android:textColor="@color/text_primary"
+            android:textCursorDrawable="@null"
+            android:layout_marginEnd="8dp"/>
+
+        <EditText
+            android:id="@+id/otp4"
+            android:layout_width="48dp"
+            android:layout_height="56dp"
+            android:background="@drawable/otp_edittext_bg"
+            android:gravity="center"
+            android:textSize="24sp"
+            android:inputType="number"
+            android:maxLength="1"
+            android:padding="0dp"
+            android:textColor="@color/text_primary"
+            android:textCursorDrawable="@null"
+            android:layout_marginEnd="8dp"/>
+
+        <EditText
+            android:id="@+id/otp5"
+            android:layout_width="48dp"
+            android:layout_height="56dp"
+            android:background="@drawable/otp_edittext_bg"
+            android:gravity="center"
+            android:textSize="24sp"
+            android:inputType="number"
+            android:maxLength="1"
+            android:padding="0dp"
+            android:textColor="@color/text_primary"
+            android:textCursorDrawable="@null"
+            android:layout_marginEnd="8dp"/>
+
+        <EditText
+            android:id="@+id/otp6"
+            android:layout_width="48dp"
+            android:layout_height="56dp"
+            android:background="@drawable/otp_edittext_bg"
+            android:gravity="center"
+            android:textSize="24sp"
+            android:inputType="number"
+            android:maxLength="1"
+            android:padding="0dp"
+            android:textColor="@color/text_primary"
+            android:textCursorDrawable="@null"/>
+    </LinearLayout>
+
+    <!-- NEXT Button -->
+    <Button
+        android:id="@+id/btn_next"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:background="@drawable/rounded_button_bg"
+        android:text="NEXT"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:textAllCaps="true"
+        android:textSize="16sp"
+        app:backgroundTint="@color/button_green"/>
+
+    <!-- Resend Code Section -->
+    <TextView
+        android:id="@+id/tv_resend"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="RESEND CODE IN 60 SECONDS"
+        android:textColor="@color/button_green"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:background="@drawable/outlined_button"
+        android:layout_marginTop="24dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
+        />
+    />
+</LinearLayout>
