@@ -2,6 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -12,9 +18,61 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Canpay_operator"
         tools:targetApi="31">
+
+        <!-- SplashActivity as launcher -->
         <activity
             android:name=".SplashActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+
+        <activity
+            android:name=".PinLoginActivity"
             android:exported="false" />
+        <activity
+            android:name=".ConfirmSetPinActivity"
+            android:exported="false" />
+        <activity
+            android:name=".SetPinActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AccountFailureActivity"
+            android:exported="false" />
+        <activity
+            android:name=".HomeActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AccountSuccessActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ConfirmPinCodeActivity"
+            android:exported="false" />
+        <activity
+            android:name=".PinCodeActivity"
+            android:exported="false" />
+        <activity
+            android:name=".TakePhotoActivity"
+            android:exported="false" />
+        <activity
+            android:name=".NICEntryActivity"
+            android:exported="false" />
+        <activity
+            android:name=".NameActivity"
+            android:exported="false" />
+        <activity
+            android:name=".PhoneNoActivity"
+            android:exported="false" />
+        <activity
+            android:name=".OtpActivity"
+            android:exported="false" />
+        <activity
+            android:name=".LoginActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>
