@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">canpay_operator</string>
+    <string name="back_button">Back</string>
 </resources>
