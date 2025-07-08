@@ -19,7 +19,16 @@
         android:theme="@style/Theme.Canpay_operator"
         tools:targetApi="31">
         <activity
-            android:name=".SettingsActivity"
+            android:name=".ReceiptDetailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AssignedFailedActivity"
+            android:exported="false" />
+        <activity
+            android:name=".AssignedSuccessActivity"
+            android:exported="false" />
+        <activity
+            android:name=".SettingsFragment"
             android:exported="false" />
         <activity
             android:name=".NotificationsActivity"

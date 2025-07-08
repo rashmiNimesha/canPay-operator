@@ -60,8 +60,8 @@ public class OtpActivity extends AppCompatActivity {
                 for (EditText box : otpBoxes) {
                     otp.append(box.getText().toString().trim());
                 }
-                String email = getIntent().getStringExtra("email");
-                onOtpValidated(email, otp.toString());
+                String phoneNumber = getIntent().getStringExtra("phone_number"); // Ensure phone number is passed
+                onOtpValidated(phoneNumber, otp.toString());
             }
         });
 
@@ -101,16 +101,50 @@ public class OtpActivity extends AppCompatActivity {
     }
 
     /**
-     * Placeholder method called after front-end validation.
-     * Your partner’s backend validation and navigation logic should be called here.
+     * Called after front-end validation.
+     * Replace simulated checks with real backend calls.
      */
-    private void onOtpValidated(String email, String otp) {
-        if (email == null || email.isEmpty()) {
-            Toast.makeText(this, "Missing email", Toast.LENGTH_SHORT).show();
+    private void onOtpValidated(String phoneNumber, String otp) {
+        if (phoneNumber == null || phoneNumber.isEmpty()) {
+            Toast.makeText(this, "Missing phone number", Toast.LENGTH_SHORT).show();
             return;
         }
-        // TODO: Call backend validation here and navigate accordingly
-        Toast.makeText(this, "OTP validated: " + otp, Toast.LENGTH_SHORT).show();
+
+        // TODO: Replace with real backend OTP validation
+        boolean isOtpValid = simulateOtpValidation(otp);
+        if (!isOtpValid) {
+            Toast.makeText(this, "Invalid OTP", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // TODO: Replace with real backend phone number existence check
+        boolean phoneExistsInDb = simulatePhoneNumberCheck(phoneNumber);
+
+        Intent intent;
+        if (phoneExistsInDb) {
+            // Phone number exists -> Navigate to SetPinActivity
+            intent = new Intent(OtpActivity.this, SetPinActivity.class);
+        } else {
+            // Phone number does NOT exist -> Navigate to NameActivity
+            intent = new Intent(OtpActivity.this, NameActivity.class);
+        }
+
+        intent.putExtra("phone_number", phoneNumber);
+        startActivity(intent);
+        finish();
+    }
+
+    // Simulated OTP validation - replace with real backend validation
+    private boolean simulateOtpValidation(String otp) {
+        // For example purposes only, accept "123456" as valid OTP
+        return otp.equals("123456");
+    }
+
+    // Simulated phone number existence check - replace with real backend call
+    private boolean simulatePhoneNumberCheck(String phoneNumber) {
+        // For example, phone numbers ending with even digit exist
+        char lastDigit = phoneNumber.charAt(phoneNumber.length() - 1);
+        return (lastDigit - '0') % 2 == 0;
     }
 
     private void startResendTimer() {
@@ -132,7 +166,3 @@ public class OtpActivity extends AppCompatActivity {
         super.onDestroy();
     }
 }
-
-
-// Refer to the SetPinActivity : when phone number is already available on the DB
-// Refer to the NameActivity : when phone number is not available on DX

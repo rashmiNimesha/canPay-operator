@@ -2,5 +2,7 @@
     <string name="app_name">canpay_operator</string>
     <string name="back_button">Back</string>
     <string name="canpay_logo">CanPay logo</string>
+    <string name="no_transactions_icon">No transactions icon</string>
+
 
 </resources>
