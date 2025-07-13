@@ -1,26 +1,38 @@
 package com.example.canpay_operator;
 
+import static com.android.volley.VolleyLog.TAG;
+
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.appcompat.app.AppCompatActivity;
+import com.android.volley.VolleyError;
+import com.example.canpay_operator.config.ApiConfig;
+import com.example.canpay_operator.utils.ApiHelper;
+import com.example.canpay_operator.utils.Endpoints;
+import com.example.canpay_operator.utils.PreferenceManager;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 
 public class OtpActivity extends AppCompatActivity {
 
     private EditText[] otpBoxes = new EditText[6];
     private TextView tvResend;
     private Button btnNext;
-    private ImageButton btnBack;
     private CountDownTimer timer;
     private int resendSeconds = 60;
+    private String email;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,14 +47,17 @@ public class OtpActivity extends AppCompatActivity {
         otpBoxes[5] = findViewById(R.id.otp6);
         tvResend = findViewById(R.id.tv_resend);
         btnNext = findViewById(R.id.btn_next);
-        btnBack = findViewById(R.id.btn_back);
+        ImageButton btnBack = findViewById(R.id.btn_back);
+        email = getIntent().getStringExtra("email");
 
-        // Auto move focus between OTP boxes
+        // Auto move focus
         for (int i = 0; i < otpBoxes.length; i++) {
             final int index = i;
             otpBoxes[i].addTextChangedListener(new TextWatcher() {
-                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {}
                 @Override
                 public void afterTextChanged(Editable s) {
                     if (s.length() == 1 && index < otpBoxes.length - 1) {
@@ -54,17 +69,10 @@ public class OtpActivity extends AppCompatActivity {
             });
         }
 
-        btnNext.setOnClickListener(v -> {
-            if (validateOtpInputs()) {
-                StringBuilder otp = new StringBuilder();
-                for (EditText box : otpBoxes) {
-                    otp.append(box.getText().toString().trim());
-                }
-                String phoneNumber = getIntent().getStringExtra("phone_number"); // Ensure phone number is passed
-                onOtpValidated(phoneNumber, otp.toString());
-            }
-        });
+        // NEXT Button: Validate OTP and navigate to NameActivity
+        btnNext.setOnClickListener(v -> handleOtpVerification());
 
+        // Back button: Navigate to PhoneNoActivity
         btnBack.setOnClickListener(v -> {
             Intent intent = new Intent(OtpActivity.this, PhoneNoActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -72,79 +80,90 @@ public class OtpActivity extends AppCompatActivity {
             finish();
         });
 
+        // Resend code timer
         startResendTimer();
 
+        // Resend click
         tvResend.setOnClickListener(v -> {
             if (tvResend.isEnabled()) {
-                // Your partner handles backend resend logic
-                Toast.makeText(this, "Resend OTP clicked", Toast.LENGTH_SHORT).show();
+                resendOtp(email); // call resend logic
                 startResendTimer();
             }
         });
+
     }
 
-    private boolean validateOtpInputs() {
-        for (int i = 0; i < otpBoxes.length; i++) {
-            String digit = otpBoxes[i].getText().toString().trim();
+    private void handleOtpVerification() {
+        StringBuilder otp = new StringBuilder();
+        for (EditText box : otpBoxes) {
+            String digit = box.getText().toString().trim();
             if (digit.isEmpty()) {
-                Toast.makeText(this, "Please enter all 6 digits", Toast.LENGTH_SHORT).show();
-                otpBoxes[i].requestFocus();
-                return false;
+                Toast.makeText(this, "Enter all 6 digits", Toast.LENGTH_SHORT).show();
+                return;
             }
-            if (!digit.matches("\\d")) {
-                Toast.makeText(this, "OTP digits must be numeric", Toast.LENGTH_SHORT).show();
-                otpBoxes[i].requestFocus();
-                return false;
-            }
+            otp.append(digit);
         }
-        return true;
-    }
 
-    /**
-     * Called after front-end validation.
-     * Replace simulated checks with real backend calls.
-     */
-    private void onOtpValidated(String phoneNumber, String otp) {
-        if (phoneNumber == null || phoneNumber.isEmpty()) {
-            Toast.makeText(this, "Missing phone number", Toast.LENGTH_SHORT).show();
+        if (email == null || email.isEmpty()) {
+            Toast.makeText(this, "Missing email", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // TODO: Replace with real backend OTP validation
-        boolean isOtpValid = simulateOtpValidation(otp);
-        if (!isOtpValid) {
-            Toast.makeText(this, "Invalid OTP", Toast.LENGTH_SHORT).show();
+        JSONObject body = new JSONObject();
+        try {
+            body.put("email", email);
+            body.put("otp", otp.toString());
+            body.put("role", ApiConfig.USER_ROLE);
+        } catch (JSONException e) {
+            Log.e(TAG, "JSON creation error", e);
+            Toast.makeText(this, "Error creating request", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        // TODO: Replace with real backend phone number existence check
-        boolean phoneExistsInDb = simulatePhoneNumberCheck(phoneNumber);
+        ApiHelper.postJson(this, Endpoints.VERIFY_OTP, body, null, new ApiHelper.Callback() {
+            @Override
+            public void onSuccess(JSONObject response) {
+                try {
+                    JSONObject data = response.getJSONObject("data");
+                    boolean isNewUser = data.getBoolean("newUser");
+                    String token = data.getString("token");
+                    JSONObject profile = data.getJSONObject("profile");
+                    String userEmail = profile.getString("email");
+                    String userRole = profile.getString("role");
+                    String userName = profile.optString("name", null);
+                    String photo = profile.optString("photo", null);
+                    String nic = profile.optString("nic", null);
+                    int userId = profile.optInt("id", 0);
 
-        Intent intent;
-        if (phoneExistsInDb) {
-            // Phone number exists -> Navigate to SetPinActivity
-            intent = new Intent(OtpActivity.this, SetPinActivity.class);
-        } else {
-            // Phone number does NOT exist -> Navigate to NameActivity
-            intent = new Intent(OtpActivity.this, NameActivity.class);
-        }
+                    // Save token and role to EncryptedSharedPreferences
+                    PreferenceManager.saveUserSession(OtpActivity.this, userEmail, token, userRole, userName, userId, nic,photo);
+                    Log.d(TAG, "Saved session for email: " + userEmail);
 
-        intent.putExtra("phone_number", phoneNumber);
-        startActivity(intent);
-        finish();
-    }
+                    if (isNewUser) {
+                        Toast.makeText(OtpActivity.this, "OTP verified. Please complete your profile.", Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(OtpActivity.this, NameActivity.class);
+                        intent.putExtra("email", userEmail);
+                        startActivity(intent);
+                        finish();
+                    } else {
+                        Toast.makeText(OtpActivity.this, "Welcome back!", Toast.LENGTH_SHORT).show();
+                        Intent intent = new Intent(OtpActivity.this, HomeActivity.class);
+                        intent.putExtra("email", userEmail);
+                        startActivity(intent);
+                        finish();
+                    }
+                } catch (JSONException e) {
+                    Log.e(TAG, "Error parsing response", e);
+                    Toast.makeText(OtpActivity.this, "Invalid server response", Toast.LENGTH_SHORT).show();
+                }
+            }
 
-    // Simulated OTP validation - replace with real backend validation
-    private boolean simulateOtpValidation(String otp) {
-        // For example purposes only, accept "123456" as valid OTP
-        return otp.equals("123456");
-    }
-
-    // Simulated phone number existence check - replace with real backend call
-    private boolean simulatePhoneNumberCheck(String phoneNumber) {
-        // For example, phone numbers ending with even digit exist
-        char lastDigit = phoneNumber.charAt(phoneNumber.length() - 1);
-        return (lastDigit - '0') % 2 == 0;
+            @Override
+            public void onError(VolleyError error) {
+                ApiHelper.handleVolleyError(OtpActivity.this, error, TAG);
+                Toast.makeText(OtpActivity.this, "Invalid OTP or other error", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void startResendTimer() {
@@ -158,6 +177,33 @@ public class OtpActivity extends AppCompatActivity {
                 tvResend.setEnabled(true);
             }
         }.start();
+    }
+
+    private void resendOtp(String email) {
+        if (email == null || email.isEmpty()) {
+            Toast.makeText(this, "Missing email address", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        JSONObject body = new JSONObject();
+        try {
+            body.put("email", email);
+        } catch (JSONException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        ApiHelper.postJson(this, Endpoints.SEND_OTP, body, null, new ApiHelper.Callback() {
+            @Override
+            public void onSuccess(JSONObject response) {
+                Toast.makeText(OtpActivity.this, "OTP resent to " + email, Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onError(VolleyError error) {
+                ApiHelper.handleVolleyError(OtpActivity.this, error, TAG);
+            }
+        });
     }
 
     @Override

@@ -6,61 +6,59 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
 public class PinLoginActivity extends AppCompatActivity {
 
+    private static final String TAG = "PinLoginActivity";
+
     private EditText pin1, pin2, pin3, pin4;
-    private Button btnResetPin;
+    private Button btnEnter;
 
     private SharedPreferences sharedPreferences;
     private static final String PREFS_NAME = "CanpayPrefs";
     private static final String KEY_SET_PIN = "set_pin";
+    private static final String KEY_JWT_TOKEN = "jwt_token"; // Key where JWT token is stored
+
+    private static final String VALIDATE_TOKEN_URL = "http://10.0.2.2:8081/validate-token"; // Replace with your backend URL
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_pin_login); // Use your actual XML layout filename
+        setContentView(R.layout.activity_pin_login);
 
         pin1 = findViewById(R.id.pin1);
         pin2 = findViewById(R.id.pin2);
         pin3 = findViewById(R.id.pin3);
         pin4 = findViewById(R.id.pin4);
-        btnResetPin = findViewById(R.id.btn_enter); // Your button id is btn_enter but text is "RESET PIN"
+        btnEnter = findViewById(R.id.btn_enter);
 
         sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
 
         setupPinEditTexts();
 
-        btnResetPin.setOnClickListener(v -> {
-            // Navigate to ResetPinActivity when reset pin button clicked
-            Intent intent = new Intent(PinLoginActivity.this, PhoneNoActivity.class);
-            startActivity(intent);
+        btnEnter.setOnClickListener(v -> {
+            if (allPinsFilled()) {
+                validateTokenThenPin();
+            } else {
+                Toast.makeText(this, "Please enter all 4 digits of your PIN", Toast.LENGTH_SHORT).show();
+            }
         });
-
-        // Listen for PIN input completion and validate automatically
-        // Alternatively, you can add a separate "Login" button and validate on click
-        LinearLayout pinContainer = findViewById(R.id.pin_container);
-        // Optional: add a listener to validate PIN automatically once 4 digits entered
-        // Here, we add TextWatchers to do that:
-        EditText[] pins = {pin1, pin2, pin3, pin4};
-        for (EditText pin : pins) {
-            pin.addTextChangedListener(new TextWatcher() {
-                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
-                @Override
-                public void afterTextChanged(Editable s) {
-                    if (allPinsFilled()) {
-                        validatePinAndLogin();
-                    }
-                }
-            });
-        }
     }
 
     private void setupPinEditTexts() {
@@ -90,6 +88,47 @@ public class PinLoginActivity extends AppCompatActivity {
                 !pin4.getText().toString().trim().isEmpty();
     }
 
+    private void validateTokenThenPin() {
+        String token = sharedPreferences.getString(KEY_JWT_TOKEN, null);
+        if (token == null) {
+            Toast.makeText(this, "Session expired. Please login again.", Toast.LENGTH_LONG).show();
+            redirectToLogin();
+            return;
+        }
+
+        RequestQueue queue = Volley.newRequestQueue(this);
+
+        JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, VALIDATE_TOKEN_URL, null,
+                response -> {
+                    try {
+                        boolean success = response.getBoolean("success");
+                        if (success) {
+                            // Token valid, proceed to PIN validation
+                            validatePinAndLogin();
+                        } else {
+                            Toast.makeText(this, "Session expired. Please login again.", Toast.LENGTH_LONG).show();
+                            redirectToLogin();
+                        }
+                    } catch (JSONException e) {
+                        Log.e(TAG, "JSON parsing error: " + e.getMessage());
+                        Toast.makeText(this, "Unexpected response from server", Toast.LENGTH_SHORT).show();
+                    }
+                },
+                error -> {
+                    Log.e(TAG, "Token validation error: " + error.getMessage());
+                    Toast.makeText(this, "Network error. Please try again.", Toast.LENGTH_SHORT).show();
+                }) {
+            @Override
+            public java.util.Map<String, String> getHeaders() {
+                java.util.Map<String, String> headers = new java.util.HashMap<>();
+                headers.put("Authorization", "Bearer " + token);
+                return headers;
+            }
+        };
+
+        queue.add(request);
+    }
+
     private void validatePinAndLogin() {
         String enteredPin = pin1.getText().toString().trim() +
                 pin2.getText().toString().trim() +
@@ -103,7 +142,9 @@ public class PinLoginActivity extends AppCompatActivity {
 
         String savedPin = sharedPreferences.getString(KEY_SET_PIN, null);
         if (savedPin == null) {
-            Toast.makeText(this, "No PIN set. Please reset your PIN.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "No PIN set. Please set your PIN first.", Toast.LENGTH_LONG).show();
+            clearPinInputs();
+            pin1.requestFocus();
             return;
         }
 
@@ -125,5 +166,12 @@ public class PinLoginActivity extends AppCompatActivity {
         pin2.setText("");
         pin3.setText("");
         pin4.setText("");
+    }
+
+    private void redirectToLogin() {
+        Intent intent = new Intent(PinLoginActivity.this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+        finish();
     }
 }

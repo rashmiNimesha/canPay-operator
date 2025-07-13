@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:background="@drawable/screen_bg"
     android:padding="24dp">
@@ -14,10 +14,10 @@
         android:layout_height="40dp"
         android:background="@drawable/ic_back_circle_bg"
         android:src="@drawable/ic_back_arrow"
-        android:contentDescription="Back"
+        android:contentDescription="@string/back_button_desc"
         android:layout_gravity="start"
         android:scaleType="center"
-        app:tint="@color/button_green"/>
+        app:tint="@color/button_green" />
 
     <!-- Title -->
     <TextView
@@ -28,7 +28,7 @@
         android:textColor="@color/text_primary"
         android:textSize="24sp"
         android:textStyle="bold"
-        android:layout_marginTop="32dp"/>
+        android:layout_marginTop="32dp" />
 
     <!-- Subtitle -->
     <TextView
@@ -38,9 +38,9 @@
         android:text="A code was sent to 07XXXXXXXX."
         android:textColor="@color/text_secondary"
         android:textSize="14sp"
-        android:layout_marginTop="8dp"/>
+        android:layout_marginTop="8dp" />
 
-    <!-- OTP Boxes -->
+    <!-- OTP Boxes Container -->
     <LinearLayout
         android:id="@+id/otp_container"
         android:layout_width="match_parent"
@@ -50,6 +50,7 @@
         android:layout_marginTop="32dp"
         android:layout_marginBottom="32dp">
 
+        <!-- Six OTP EditTexts -->
         <EditText
             android:id="@+id/otp1"
             android:layout_width="48dp"
@@ -62,7 +63,7 @@
             android:padding="0dp"
             android:textColor="@color/text_primary"
             android:textCursorDrawable="@null"
-            android:layout_marginEnd="8dp"/>
+            android:layout_marginEnd="8dp" />
 
         <EditText
             android:id="@+id/otp2"
@@ -76,7 +77,7 @@
             android:padding="0dp"
             android:textColor="@color/text_primary"
             android:textCursorDrawable="@null"
-            android:layout_marginEnd="8dp"/>
+            android:layout_marginEnd="8dp" />
 
         <EditText
             android:id="@+id/otp3"
@@ -90,7 +91,7 @@
             android:padding="0dp"
             android:textColor="@color/text_primary"
             android:textCursorDrawable="@null"
-            android:layout_marginEnd="8dp"/>
+            android:layout_marginEnd="8dp" />
 
         <EditText
             android:id="@+id/otp4"
@@ -104,7 +105,7 @@
             android:padding="0dp"
             android:textColor="@color/text_primary"
             android:textCursorDrawable="@null"
-            android:layout_marginEnd="8dp"/>
+            android:layout_marginEnd="8dp" />
 
         <EditText
             android:id="@+id/otp5"
@@ -118,7 +119,7 @@
             android:padding="0dp"
             android:textColor="@color/text_primary"
             android:textCursorDrawable="@null"
-            android:layout_marginEnd="8dp"/>
+            android:layout_marginEnd="8dp" />
 
         <EditText
             android:id="@+id/otp6"
@@ -131,7 +132,7 @@
             android:maxLength="1"
             android:padding="0dp"
             android:textColor="@color/text_primary"
-            android:textCursorDrawable="@null"/>
+            android:textCursorDrawable="@null" />
     </LinearLayout>
 
     <!-- NEXT Button -->
@@ -145,7 +146,7 @@
         android:textStyle="bold"
         android:textAllCaps="true"
         android:textSize="16sp"
-        app:backgroundTint="@color/button_green"/>
+        app:backgroundTint="@color/button_green" />
 
     <!-- Resend Code Section -->
     <TextView
@@ -161,7 +162,6 @@
         android:layout_marginTop="24dp"
         android:clickable="true"
         android:focusable="true"
-        android:foreground="?attr/selectableItemBackground"
-        />
-    />
+        android:foreground="?attr/selectableItemBackground" />
+
 </LinearLayout>
