@@ -5,6 +5,8 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.util.Base64;
@@ -19,6 +21,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 
 import com.android.volley.VolleyError;
 import com.example.canpay_operator.utils.ApiHelper;
@@ -28,6 +31,11 @@ import com.example.canpay_operator.utils.PreferenceManager;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -40,12 +48,11 @@ public class TakePhotoActivity extends AppCompatActivity {
     private CircleImageView imgPhoto;
     private ImageView imgCameraIcon;
     private Button btnTakePhoto, btnNext, btnRetake;
-    private Bitmap capturedPhoto = null;
 
-    private String email;
-    private String authToken;
-    private String name;
-    private String nic;
+    private Uri photoUri;
+    private File photoFile;
+
+    private String email, authToken, name, nic;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,10 +66,7 @@ public class TakePhotoActivity extends AppCompatActivity {
         btnRetake = findViewById(R.id.btn_retake);
         ImageButton btnBack = findViewById(R.id.btn_back);
 
-        // Get authToken from PreferenceManager (fixed)
         authToken = PreferenceManager.getToken(this);
-
-        // Retrieve other user info from Intent
         email = getIntent().getStringExtra("email");
         name = getIntent().getStringExtra("name");
         nic = getIntent().getStringExtra("nic");
@@ -83,24 +87,11 @@ public class TakePhotoActivity extends AppCompatActivity {
             finish();
         });
 
-        btnTakePhoto.setOnClickListener(v -> {
-            if (checkCameraPermission()) {
-                openCamera();
-            } else {
-                requestCameraPermission();
-            }
-        });
-
-        btnRetake.setOnClickListener(v -> {
-            if (checkCameraPermission()) {
-                openCamera();
-            } else {
-                requestCameraPermission();
-            }
-        });
+        btnTakePhoto.setOnClickListener(v -> handleCameraLaunch());
+        btnRetake.setOnClickListener(v -> handleCameraLaunch());
 
         btnNext.setOnClickListener(v -> {
-            if (capturedPhoto == null) {
+            if (photoFile == null || !photoFile.exists()) {
                 Toast.makeText(this, "Please take a photo first.", Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -108,6 +99,14 @@ public class TakePhotoActivity extends AppCompatActivity {
         });
 
         setPhotoUIState(false);
+    }
+
+    private void handleCameraLaunch() {
+        if (checkCameraPermission()) {
+            openCamera();
+        } else {
+            requestCameraPermission();
+        }
     }
 
     private boolean checkCameraPermission() {
@@ -119,101 +118,102 @@ public class TakePhotoActivity extends AppCompatActivity {
     }
 
     private void openCamera() {
-        Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        try {
-            startActivityForResult(cameraIntent, CAMERA_REQUEST);
-        } catch (Exception e) {
-            Toast.makeText(this, "Camera not available", Toast.LENGTH_SHORT).show();
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (intent.resolveActivity(getPackageManager()) != null) {
+            try {
+                photoFile = createImageFile();
+                if (photoFile != null) {
+                    photoUri = FileProvider.getUriForFile(
+                            this,
+                            getPackageName() + ".fileprovider",
+                            photoFile
+                    );
+                    intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+                    intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    startActivityForResult(intent, CAMERA_REQUEST);
+                } else {
+                    Toast.makeText(this, "Could not create image file", Toast.LENGTH_SHORT).show();
+                }
+            } catch (IOException e) {
+                Toast.makeText(this, "Failed to create image file", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            Toast.makeText(this, "No camera app found on device", Toast.LENGTH_SHORT).show();
         }
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == CAMERA_PERMISSION_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                openCamera();
-            } else {
-                Toast.makeText(this, "Camera permission is required", Toast.LENGTH_SHORT).show();
-            }
-        }
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    private File createImageFile() throws IOException {
+        String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+        String fileName = "JPEG_" + timestamp + "_";
+        File storageDir = getExternalFilesDir(null); // Internal app directory
+        return File.createTempFile(fileName, ".jpg", storageDir);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK && data != null) {
-            Bitmap photo = (Bitmap) data.getExtras().get("data");
-            if (photo != null) {
-                capturedPhoto = photo;
-                imgPhoto.setImageBitmap(photo);
-                setPhotoUIState(true);
-            } else {
-                Toast.makeText(this, "Failed to capture image", Toast.LENGTH_SHORT).show();
-            }
+        if (requestCode == CAMERA_REQUEST && resultCode == Activity.RESULT_OK && photoFile != null) {
+            Bitmap bitmap = BitmapFactory.decodeFile(photoFile.getAbsolutePath());
+            imgPhoto.setImageBitmap(bitmap);
+            setPhotoUIState(true);
         }
     }
 
     private void setPhotoUIState(boolean photoTaken) {
-        if (photoTaken) {
-            imgCameraIcon.setVisibility(View.GONE);
-            btnTakePhoto.setVisibility(View.GONE);
-            btnNext.setVisibility(View.VISIBLE);
-            btnRetake.setVisibility(View.VISIBLE);
-            btnNext.setEnabled(true);
-            btnRetake.setEnabled(true);
-        } else {
-            imgPhoto.setImageResource(R.drawable.ic_camera_placeholder); // Your placeholder drawable
-            imgCameraIcon.setVisibility(View.VISIBLE);
-            btnTakePhoto.setVisibility(View.VISIBLE);
-            btnNext.setVisibility(View.GONE);
-            btnRetake.setVisibility(View.GONE);
-            btnNext.setEnabled(false);
-            btnRetake.setEnabled(false);
-        }
+        imgCameraIcon.setVisibility(photoTaken ? View.GONE : View.VISIBLE);
+        btnTakePhoto.setVisibility(photoTaken ? View.GONE : View.VISIBLE);
+        btnNext.setVisibility(photoTaken ? View.VISIBLE : View.GONE);
+        btnRetake.setVisibility(photoTaken ? View.VISIBLE : View.GONE);
+        btnNext.setEnabled(photoTaken);
+        btnRetake.setEnabled(photoTaken);
     }
 
     private void uploadPhotoAndCompleteProfile() {
         btnNext.setEnabled(false);
 
-        // Convert Bitmap to Base64 string
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        capturedPhoto.compress(Bitmap.CompressFormat.JPEG, 80, baos);
-        byte[] imageBytes = baos.toByteArray();
-        String encodedImage = Base64.encodeToString(imageBytes, Base64.NO_WRAP);
-
-        JSONObject jsonBody = new JSONObject();
         try {
+            FileInputStream fis = new FileInputStream(photoFile);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            while ((bytesRead = fis.read(buffer)) != -1) {
+                baos.write(buffer, 0, bytesRead);
+            }
+            fis.close();
+
+            String base64Image = Base64.encodeToString(baos.toByteArray(), Base64.NO_WRAP);
+
+            JSONObject jsonBody = new JSONObject();
             jsonBody.put("email", email);
             jsonBody.put("name", name);
             jsonBody.put("nic", nic);
-            jsonBody.put("profileImage", encodedImage); // Backend expects Base64 string
+            jsonBody.put("profileImage", "data:image/jpeg;base64," + base64Image); // ✅ Correct format
+            jsonBody.put("role", "OPERATOR");
+
+            ApiHelper.postJson(this, Endpoints.SAVE_USER_PROFILE, jsonBody, authToken, new ApiHelper.Callback() {
+                @Override
+                public void onSuccess(JSONObject response) {
+                    btnNext.setEnabled(true);
+                    Toast.makeText(TakePhotoActivity.this, "Profile completed successfully!", Toast.LENGTH_SHORT).show();
+
+                    Intent intent = new Intent(TakePhotoActivity.this, PinCodeActivity.class);
+                    intent.putExtra("email", email);
+                    intent.putExtra("token", authToken);
+                    startActivity(intent);
+                    finish();
+                }
+
+                @Override
+                public void onError(VolleyError error) {
+                    btnNext.setEnabled(true);
+                    ApiHelper.handleVolleyError(TakePhotoActivity.this, error, TAG);
+                }
+            });
+
         } catch (Exception e) {
-            Log.e(TAG, "JSON creation error", e);
-            Toast.makeText(this, "Error preparing data", Toast.LENGTH_SHORT).show();
+            Log.e(TAG, "Image conversion error", e);
+            Toast.makeText(this, "Error processing image", Toast.LENGTH_SHORT).show();
             btnNext.setEnabled(true);
-            return;
         }
-
-        // Pass authToken properly as a string (no JSON stringify of headers)
-        ApiHelper.postJson(this, Endpoints.SAVE_USER_PROFILE, jsonBody, authToken, new ApiHelper.Callback() {
-            @Override
-            public void onSuccess(JSONObject response) {
-                btnNext.setEnabled(true);
-                Toast.makeText(TakePhotoActivity.this, "Profile completed successfully!", Toast.LENGTH_SHORT).show();
-
-                Intent intent = new Intent(TakePhotoActivity.this, PinCodeActivity.class);
-                intent.putExtra("email", email);
-                intent.putExtra("token", authToken);
-                startActivity(intent);
-                finish();
-            }
-
-            @Override
-            public void onError(VolleyError error) {
-                btnNext.setEnabled(true);
-                ApiHelper.handleVolleyError(TakePhotoActivity.this, error, TAG);
-            }
-        });
     }
 }
