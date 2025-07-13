@@ -25,7 +25,7 @@
         android:id="@+id/tv_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="What’s your phone number?"
+        android:text="What’s your email address?"
         android:textColor="@color/text_primary"
         android:textSize="24sp"
         android:textStyle="bold"
