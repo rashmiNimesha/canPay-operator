@@ -1,6 +1,5 @@
 package com.example.canpay_operator;
 
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -15,16 +14,15 @@ import androidx.fragment.app.Fragment;
 
 import com.google.zxing.BarcodeFormat;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
+import com.example.canpay_operator.utils.PreferenceManager;
 
 public class HomeUnassignedFragment extends Fragment {
 
     private ImageView imgQr;
-    private TextView tvPhone, tvTitle, tvInstructions;
-
-    private static final String PREFS_NAME = "CanpayPrefs";
+    private TextView tvEmail, tvTitle, tvInstructions;
 
     public HomeUnassignedFragment() {
-        // Required empty public constructor
+        // Required empty constructor
     }
 
     @Nullable
@@ -36,29 +34,38 @@ public class HomeUnassignedFragment extends Fragment {
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view,
+                              @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
         imgQr = view.findViewById(R.id.img_qr);
-        tvPhone = view.findViewById(R.id.tv_phone);
+        tvEmail = view.findViewById(R.id.tv_phone); // Reusing tv_phone as per your XML
         tvTitle = view.findViewById(R.id.tv_title);
         tvInstructions = view.findViewById(R.id.tv_instructions);
 
-        loadUserPhoneAndGenerateQr();
+        generateQrWithUserData();
     }
 
-    private void loadUserPhoneAndGenerateQr() {
-        SharedPreferences prefs = requireActivity().getSharedPreferences(PREFS_NAME, getActivity().MODE_PRIVATE);
-        String phone = prefs.getString("phone", "071 23 45 678");
-        tvPhone.setText(phone);
+    private void generateQrWithUserData() {
+        String userId = PreferenceManager.getUserId(requireContext());
+        String email = PreferenceManager.getEmail(requireContext());
 
-        try {
-            BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
-            Bitmap bitmap = barcodeEncoder.encodeBitmap(phone, BarcodeFormat.QR_CODE, 400, 400);
-            imgQr.setImageBitmap(bitmap);
-        } catch (Exception e) {
-            // Fallback image or error handling
+        // Show email or fallback text
+        tvEmail.setText(email != null && !email.isEmpty() ? email : "Email not available");
+
+        if (userId != null && !userId.isEmpty()) {
+            try {
+                BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
+                Bitmap qrBitmap = barcodeEncoder.encodeBitmap(userId, BarcodeFormat.QR_CODE, 400, 400);
+                imgQr.setImageBitmap(qrBitmap);
+            } catch (Exception e) {
+                e.printStackTrace();
+                imgQr.setImageResource(R.drawable.ic_no_transactions);
+                tvInstructions.setText("Failed to generate QR code.");
+            }
+        } else {
             imgQr.setImageResource(R.drawable.ic_no_transactions);
+            tvInstructions.setText("User ID is not available.");
         }
     }
 }

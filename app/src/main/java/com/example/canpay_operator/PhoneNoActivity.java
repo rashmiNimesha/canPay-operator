@@ -1,6 +1,8 @@
 package com.example.canpay_operator;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -15,6 +17,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.android.volley.VolleyError;
 import com.example.canpay_operator.utils.ApiHelper;
 import com.example.canpay_operator.utils.Endpoints;
+import com.example.canpay_operator.utils.PreferenceManager;
+
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -59,6 +63,9 @@ public class PhoneNoActivity extends AppCompatActivity {
                 btnLogin.setEnabled(true);
                 return;
             }
+
+            // Save email locally
+            PreferenceManager.setEmail(PhoneNoActivity.this, email);
 
             JSONObject jsonBody = new JSONObject();
             try {

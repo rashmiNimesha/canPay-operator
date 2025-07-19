@@ -23,7 +23,6 @@ import com.example.canpay_operator.utils.PreferenceManager;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-
 public class OtpActivity extends AppCompatActivity {
 
     private EditText[] otpBoxes = new EditText[6];
@@ -32,7 +31,6 @@ public class OtpActivity extends AppCompatActivity {
     private CountDownTimer timer;
     private int resendSeconds = 60;
     private String email;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,14 +48,12 @@ public class OtpActivity extends AppCompatActivity {
         ImageButton btnBack = findViewById(R.id.btn_back);
         email = getIntent().getStringExtra("email");
 
-        // Auto move focus
+        // Auto move focus between OTP boxes
         for (int i = 0; i < otpBoxes.length; i++) {
             final int index = i;
             otpBoxes[i].addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {}
+                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
                 @Override
                 public void afterTextChanged(Editable s) {
                     if (s.length() == 1 && index < otpBoxes.length - 1) {
@@ -69,10 +65,8 @@ public class OtpActivity extends AppCompatActivity {
             });
         }
 
-        // NEXT Button: Validate OTP and navigate to NameActivity
         btnNext.setOnClickListener(v -> handleOtpVerification());
 
-        // Back button: Navigate to PhoneNoActivity
         btnBack.setOnClickListener(v -> {
             Intent intent = new Intent(OtpActivity.this, PhoneNoActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -80,17 +74,14 @@ public class OtpActivity extends AppCompatActivity {
             finish();
         });
 
-        // Resend code timer
         startResendTimer();
 
-        // Resend click
         tvResend.setOnClickListener(v -> {
             if (tvResend.isEnabled()) {
-                resendOtp(email); // call resend logic
+                resendOtp(email);
                 startResendTimer();
             }
         });
-
     }
 
     private void handleOtpVerification() {
@@ -133,10 +124,10 @@ public class OtpActivity extends AppCompatActivity {
                     String userName = profile.optString("name", null);
                     String photo = profile.optString("photo", null);
                     String nic = profile.optString("nic", null);
-                    int userId = profile.optInt("id", 0);
+                    String userId = profile.optString("id", "");  // Changed to String here
 
-                    // Save token and role to EncryptedSharedPreferences
-                    PreferenceManager.saveUserSession(OtpActivity.this, userEmail, token, userRole, userName, userId, nic,photo);
+                    // Save user session with userId as String UUID
+                    PreferenceManager.saveUserSession(OtpActivity.this, userEmail, token, userRole, userName, userId, nic, photo);
                     Log.d(TAG, "Saved session for email: " + userEmail);
 
                     if (isNewUser) {
