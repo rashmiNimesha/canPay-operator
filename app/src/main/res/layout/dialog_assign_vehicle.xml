@@ -44,7 +44,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="ACCEPT &amp; ASSIGN"
-        android:backgroundTint="@color/button_green"
         android:background="@drawable/rounded_button_bg"
         android:textColor="@android:color/white"
         android:layout_marginBottom="12dp" />

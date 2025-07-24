@@ -33,8 +33,8 @@ public class HomeActivity extends AppCompatActivity {
                 selectedFragment = new TransactionsFragment();
             } else if (id == R.id.nav_notifications) {
                 selectedFragment = new NotificationsFragment();
-            //} else if (id == R.id.nav_settings) {
-             //   selectedFragment = new SettingsFragment();
+            } else if (id == R.id.nav_settings) {
+             selectedFragment = new SettingsFragment();
             }
 
             if (selectedFragment != null) {

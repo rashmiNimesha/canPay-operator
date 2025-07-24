@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp"
+    android:background="@drawable/rounded_white_bg"
+    android:gravity="center_horizontal">
+
+    <!-- Icon -->
+    <ImageView
+        android:id="@+id/iv_unassign_icon"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:src="@drawable/ic_logout_red"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Title -->
+    <TextView
+        android:id="@+id/tv_unassign_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Remove yourself from this bus?"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Subtitle -->
+    <TextView
+        android:id="@+id/tv_unassign_subtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="After that only the bus owner can assign you again."
+        android:textSize="14sp"
+        android:textColor="@color/text_secondary" />
+
+<!--    &lt;!&ndash; Divider &ndash;&gt;-->
+<!--    <View-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="1dp"-->
+<!--        android:layout_marginTop="24dp"-->
+<!--        android:background="@color/light_gray" />-->
+
+    <!-- Buttons container -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="25dp"
+        android:weightSum="2">
+
+        <Button
+            android:id="@+id/btn_unassign"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="UNASSIGN"
+            android:textAllCaps="true"
+            android:textColor="@android:color/white"
+            android:background="@drawable/rounded_button_bg"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp" />
+
+        <Button
+            android:id="@+id/btn_cancel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="CANCEL"
+            android:textAllCaps="true"
+            android:textColor="@color/button_green"
+            android:background="@drawable/rounded_outlined_button"
+            android:backgroundTint="@android:color/transparent"
+            android:layout_weight="1" />
+
+    </LinearLayout>
+
+</LinearLayout>

@@ -1,0 +1,115 @@
+package com.example.canpay_operator;
+
+import android.app.AlertDialog;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Bitmap;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.zxing.BarcodeFormat;
+import com.journeyapps.barcodescanner.BarcodeEncoder;
+
+public class AssignedBusQRActivity extends AppCompatActivity {
+
+    private static final String TAG = "AssignedBusQRActivity";
+    private static final String PREFS_NAME = "CanpayPrefs";
+    private static final String KEY_OPERATOR_ID = "operator_id";
+    private static final String KEY_BUS_NUMBER = "bus_number";
+    private static final String KEY_BUS_ROUTE = "bus_route";
+
+    private ImageView qrCodeImageView;
+    private TextView tvBusNumberDisplay;
+    private TextView tvBusRouteDisplay;
+    private ImageButton btnBack;
+    private ImageButton btnLogout;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_assigned_bus_qr);
+
+        // Initialize views
+        qrCodeImageView = findViewById(R.id.img_qr);
+        tvBusNumberDisplay = findViewById(R.id.tv_bus_number_display);
+        tvBusRouteDisplay = findViewById(R.id.tv_bus_route_display);
+        btnBack = findViewById(R.id.btn_back);
+        btnLogout = findViewById(R.id.btn_logout);
+
+        // Setup button listeners
+        btnBack.setOnClickListener(v -> finish());
+
+        btnLogout.setOnClickListener(v -> showUnassignConfirmationDialog());
+
+        generateAndDisplayQrCode();
+    }
+
+    private void generateAndDisplayQrCode() {
+        SharedPreferences sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+
+        String operatorId = sharedPreferences.getString(KEY_OPERATOR_ID, null);
+        String busNumber = sharedPreferences.getString(KEY_BUS_NUMBER, "N/A");
+        String busRoute = sharedPreferences.getString(KEY_BUS_ROUTE, "N/A");
+
+        if (operatorId == null || operatorId.isEmpty()) {
+            Log.e(TAG, "Operator ID not found in SharedPreferences.");
+            Toast.makeText(this, "Operator ID not available. Cannot generate QR.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        try {
+            BarcodeEncoder barcodeEncoder = new BarcodeEncoder();
+            Bitmap bitmap = barcodeEncoder.encodeBitmap(operatorId, BarcodeFormat.QR_CODE, 500, 500);
+            qrCodeImageView.setImageBitmap(bitmap);
+            tvBusNumberDisplay.setText(busNumber);
+            tvBusRouteDisplay.setText(busRoute);
+        } catch (Exception e) {
+            Log.e(TAG, "Error generating QR Code: " + e.getMessage());
+            Toast.makeText(this, "Error generating QR Code.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void showUnassignConfirmationDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_unassign_confirm, null);
+        builder.setView(dialogView);
+
+        AlertDialog dialog = builder.create();
+        dialog.setCancelable(false);
+
+        Button btnUnassign = dialogView.findViewById(R.id.btn_unassign);
+        Button btnCancel = dialogView.findViewById(R.id.btn_cancel);
+
+        btnUnassign.setOnClickListener(v -> {
+            dialog.dismiss();
+            // Perform your unassign / logout action here:
+            Toast.makeText(this, "You have been unassigned from the bus.", Toast.LENGTH_SHORT).show();
+
+            // For example, navigate to HomeUnassignedFragment
+            Intent intent = new Intent(this, HomeUnassignedFragment.class);
+            startActivity(intent);
+            finish(); // Close this QR activity
+        });
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        // Show the dialog centered and well sized
+        dialog.show();
+
+        if (dialog.getWindow() != null) {
+            int width = (int)(getResources().getDisplayMetrics().widthPixels * 0.85);
+            dialog.getWindow().setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT);
+        }
+    }
+}
