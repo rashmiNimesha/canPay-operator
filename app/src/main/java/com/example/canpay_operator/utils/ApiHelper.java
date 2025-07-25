@@ -49,7 +49,7 @@ public class ApiHelper {
                 Map<String, String> headers = new HashMap<>();
                 headers.put("Content-Type", "application/json");
                 headers.put("Accept", "application/json");
-                if (token != null) {
+                if (token != null && !token.isEmpty()) {
                     headers.put("Authorization", "Bearer " + token);
                     Log.d(TAG, "Added Authorization header: Bearer " + token.substring(0, Math.min(token.length(), 20)) + "...");
                 } else {
@@ -60,7 +60,7 @@ public class ApiHelper {
         };
 
         request.setRetryPolicy(new DefaultRetryPolicy(
-                30000, // Increased to 30s for remote server
+                30000, // 30 seconds timeout
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
         ));
@@ -94,7 +94,7 @@ public class ApiHelper {
                 Map<String, String> headers = new HashMap<>();
                 headers.put("Content-Type", "application/json");
                 headers.put("Accept", "application/json");
-                if (token != null) {
+                if (token != null && !token.isEmpty()) {
                     headers.put("Authorization", "Bearer " + token);
                     Log.d(TAG, "Added Authorization header: Bearer " + token.substring(0, Math.min(token.length(), 20)) + "...");
                 } else {
@@ -105,7 +105,7 @@ public class ApiHelper {
         };
 
         request.setRetryPolicy(new DefaultRetryPolicy(
-                15000, // Increased timeout to 15s for remote server
+                15000, // 15 seconds timeout
                 DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                 DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
         ));
@@ -113,50 +113,38 @@ public class ApiHelper {
         VolleySingleton.getInstance(context).addToRequestQueue(request);
     }
 
-    public static void handleVolleyError(Context context, VolleyError error, String tag) {
-        String errorMessage = "Unknown error occurred";
+    // New method to extract error message from VolleyError
+    public static String getErrorMessage(VolleyError error) {
+        if (error == null) return "Unknown error occurred";
 
         if (error.networkResponse != null && error.networkResponse.data != null) {
-            int statusCode = error.networkResponse.statusCode;
-            Log.e(tag, "HTTP Status Code: " + statusCode);
-
             try {
                 String responseBody = new String(error.networkResponse.data, "UTF-8");
                 JSONObject errorJson = new JSONObject(responseBody);
-                errorMessage = errorJson.optString("message", "Server error");
-                Log.e(tag, "Error Response: " + responseBody);
+                if (errorJson.has("message")) {
+                    return errorJson.getString("message");
+                }
             } catch (Exception e) {
-                Log.e(tag, "Error parsing error response", e);
-            }
-
-            switch (statusCode) {
-                case 400:
-                    errorMessage = errorMessage.contains("Server error") ? "Bad request - please check your input" : errorMessage;
-                    break;
-                case 401:
-                    errorMessage = errorMessage.contains("Server error") ? "Unauthorized - invalid token" : errorMessage;
-                    break;
-                case 404:
-                    errorMessage = "Server endpoint not found";
-                    break;
-                case 500:
-                    errorMessage = errorMessage.contains("Server error") ? "Server error - please try again later" : errorMessage;
-                    break;
-                default:
-                    errorMessage = errorMessage.contains("Server error") ? "Server error (Code: " + statusCode + ")" : errorMessage;
-            }
-        } else {
-            if (error.getCause() instanceof java.net.ConnectException) {
-                errorMessage = "Cannot connect to server - check your connection";
-            } else if (error.getCause() instanceof java.net.UnknownHostException) {
-                errorMessage = "Server not found - check server address";
-            } else if (error.getCause() instanceof java.net.SocketTimeoutException) {
-                errorMessage = "Request timeout - server might be slow";
-            } else {
-                errorMessage = error.getMessage() != null ? "Network error: " + error.getMessage() : "Unknown network error";
+                Log.e(TAG, "Error parsing error message", e);
+                return "Error occurred, but message parsing failed.";
             }
         }
 
+        if (error.getCause() instanceof java.net.ConnectException) {
+            return "Cannot connect to server - check your connection";
+        } else if (error.getCause() instanceof java.net.UnknownHostException) {
+            return "Server not found - check server address";
+        } else if (error.getCause() instanceof java.net.SocketTimeoutException) {
+            return "Request timeout - server might be slow";
+        } else if (error.getMessage() != null) {
+            return "Network error: " + error.getMessage();
+        }
+
+        return "Unknown network error occurred";
+    }
+
+    public static void handleVolleyError(Context context, VolleyError error, String tag) {
+        String errorMessage = getErrorMessage(error);
         Toast.makeText(context, errorMessage, Toast.LENGTH_LONG).show();
         Log.e(tag, "Final error message: " + errorMessage);
     }

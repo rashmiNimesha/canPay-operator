@@ -10,5 +10,7 @@
     <color name="button_green">#14A760</color>
     <color name="text_primary">#1A2341</color>
     <color name="text_secondary">#757575</color>
+    <color name="button_red">#B11D11</color>
+
 
 </resources>

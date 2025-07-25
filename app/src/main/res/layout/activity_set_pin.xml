@@ -126,5 +126,5 @@
         android:textStyle="bold"
         android:textAllCaps="true"
         android:textSize="16sp"
-        pp:backgroundTint="@color/button_green"/>
+        app:backgroundTint="@color/button_green"/>
 </LinearLayout>

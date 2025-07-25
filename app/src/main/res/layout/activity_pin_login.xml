@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:pp="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:pp="http://schemas.android.com/tools"
     android:orientation="vertical"
     android:background="@drawable/screen_bg"
     android:padding="24dp">
@@ -117,7 +117,7 @@
         android:id="@+id/btn_enter"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:text="RESET PIN"
+        android:text="LOGIN"
         android:background="@drawable/rounded_button_bg"
         android:textColor="@color/white"
         android:textStyle="bold"

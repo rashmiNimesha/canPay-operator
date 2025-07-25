@@ -1,9 +1,11 @@
 package com.example.canpay_operator;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
-import android.text.TextUtils;
-import android.view.View;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -12,74 +14,87 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import java.util.regex.Pattern;
+import com.android.volley.VolleyError;
+import com.example.canpay_operator.utils.ApiHelper;
+import com.example.canpay_operator.utils.Endpoints;
+import com.example.canpay_operator.utils.PreferenceManager;
+
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class PhoneNoActivity extends AppCompatActivity {
-
-    private ImageButton btnBack;
-    private EditText etPhone;
-    private Button btnLogin;
-    private TextView tvTermsLink;
-
-    // Allows optional +, 10-15 digits (international and local)
-    private static final Pattern PHONE_PATTERN = Pattern.compile("^[+]?[0-9]{10,15}$");
+    private static final String TAG = "PhoneNoActivity";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_phone_no); // Use your actual layout file name here
+        setContentView(R.layout.activity_phone_no);
 
-        btnBack = findViewById(R.id.btn_back);
-        etPhone = findViewById(R.id.et_phone);
-        btnLogin = findViewById(R.id.btn_login);
-        tvTermsLink = findViewById(R.id.tv_terms_link);
+        EditText etEmail = findViewById(R.id.et_phone);  // Assuming your EditText id is et_phone but holds email
+        Button btnLogin = findViewById(R.id.btn_login);
+        ImageButton btnBack = findViewById(R.id.btn_back);
+        TextView tvTermsLink = findViewById(R.id.tv_terms_link);
 
-        // Back button: navigate explicitly to LoginActivity
-        btnBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent backIntent = new Intent(PhoneNoActivity.this, LoginActivity.class);
-                backIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                startActivity(backIntent);
-                finish();
-            }
+        // Back button: navigate to LoginActivity
+        btnBack.setOnClickListener(v -> {
+            Intent intent = new Intent(PhoneNoActivity.this, LoginActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            startActivity(intent);
+            finish();
         });
 
-        // Login button
-        btnLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                String phoneNumber = etPhone.getText().toString().trim();
-                if (isValidPhoneNumber(phoneNumber)) {
-                    // Navigate to OTP Activity, passing the phone number
+        // Terms & Conditions link: open in browser
+        tvTermsLink.setOnClickListener(v -> {
+            String url = "https://www.termsfeed.com/terms-conditions-generator/";
+            Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            startActivity(browserIntent);
+        });
+
+        // Login button: send OTP
+        btnLogin.setOnClickListener(v -> {
+            if (!btnLogin.isEnabled()) return;
+            btnLogin.setEnabled(false);
+
+            String email = etEmail.getText().toString().trim();
+            if (email.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                etEmail.setError("Enter a valid email address");
+                etEmail.requestFocus();
+                btnLogin.setEnabled(true);
+                return;
+            }
+
+            // Save email locally
+            PreferenceManager.setEmail(PhoneNoActivity.this, email);
+
+            JSONObject jsonBody = new JSONObject();
+            try {
+                jsonBody.put("email", email);
+            } catch (JSONException e) {
+                Log.e(TAG, "JSON creation error", e);
+                Toast.makeText(this, "Error creating request", Toast.LENGTH_SHORT).show();
+                btnLogin.setEnabled(true);
+                return;
+            }
+
+            ApiHelper.postJson(this, Endpoints.SEND_OTP, jsonBody, null, new ApiHelper.Callback() {
+                @Override
+                public void onSuccess(JSONObject response) {
+                    Log.d(TAG, "OTP sent successfully: " + response.toString());
+                    Toast.makeText(PhoneNoActivity.this, "OTP sent to " + email, Toast.LENGTH_SHORT).show();
+
                     Intent intent = new Intent(PhoneNoActivity.this, OtpActivity.class);
-                    intent.putExtra("phone_number", phoneNumber);
+                    intent.putExtra("email", email);
                     startActivity(intent);
-                } else {
-                    if (TextUtils.isEmpty(phoneNumber)) {
-                        etPhone.setError("Phone number is required");
-                        Toast.makeText(PhoneNoActivity.this, "Please enter your phone number", Toast.LENGTH_SHORT).show();
-                    } else {
-                        etPhone.setError("Please enter a valid phone number");
-                        Toast.makeText(PhoneNoActivity.this, "Enter a valid phone number (10–15 digits)", Toast.LENGTH_SHORT).show();
-                    }
-                    etPhone.requestFocus();
+                    btnLogin.setEnabled(true);
                 }
-            }
-        });
 
-        // Terms & Conditions link is clickable but does nothing (UI only)
-        tvTermsLink.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // No action needed
-            }
+                @Override
+                public void onError(VolleyError error) {
+                    ApiHelper.handleVolleyError(PhoneNoActivity.this, error, TAG);
+                    btnLogin.setEnabled(true);
+                }
+            });
         });
-    }
-
-    private boolean isValidPhoneNumber(String phoneNumber) {
-        if (TextUtils.isEmpty(phoneNumber)) return false;
-        String cleaned = phoneNumber.replaceAll("[\\s\\-\\(\\)]", "");
-        return PHONE_PATTERN.matcher(cleaned).matches();
     }
 }

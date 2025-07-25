@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/screen_bg"
+    android:padding="24dp">
+
+    <!-- Back Arrow -->
+    <ImageButton
+        android:id="@+id/btn_back"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="@drawable/ic_back_circle_bg"
+        android:src="@drawable/ic_back_arrow"
+        android:contentDescription="Back"
+        android:layout_gravity="start"
+        android:scaleType="center"
+        app:tint="@color/button_green"/>
+
+    <!-- Title -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="37dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="-40dp"
+        android:layout_marginBottom="24dp"
+        android:text="Change PIN"
+        android:textColor="@color/text_primary"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+
+
+    <!-- Title -->
+    <TextView
+        android:id="@+id/tv_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Enter your current
+4-digit PIN"
+        android:textColor="@color/text_primary"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:layout_marginTop="20dp"/>
+
+    <!-- Subtitle -->
+    <TextView
+        android:id="@+id/tv_subtitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="First, We need to verify it’s really you."
+        android:textColor="@color/text_secondary"
+        android:textSize="14sp"
+        android:layout_marginTop="8dp"/>
+
+    <!-- PIN Boxes -->
+    <LinearLayout
+        android:id="@+id/pin_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="32dp"
+        android:layout_marginBottom="32dp">
+
+        <EditText
+            android:id="@+id/pin1"
+            android:layout_width="48dp"
+            android:layout_height="56dp"
+            android:background="@drawable/pin_underline_selector"
+            android:gravity="center"
+            android:textSize="24sp"
+            android:inputType="numberPassword"
+            android:maxLength="1"
+            android:hint="•"
+            android:textColor="@color/text_primary"
+            android:textColorHint="#C0C0C0"
+            android:textCursorDrawable="@null"
+            android:layout_marginEnd="16dp"/>
+
+        <EditText
+            android:id="@+id/pin2"
+            android:layout_width="48dp"
+            android:layout_height="56dp"
+            android:background="@drawable/pin_underline_selector"
+            android:gravity="center"
+            android:textSize="24sp"
+            android:inputType="numberPassword"
+            android:maxLength="1"
+            android:hint="•"
+            android:textColor="@color/text_primary"
+            android:textColorHint="#C0C0C0"
+            android:textCursorDrawable="@null"
+            android:layout_marginEnd="16dp"/>
+
+        <EditText
+            android:id="@+id/pin3"
+            android:layout_width="48dp"
+            android:layout_height="56dp"
+            android:background="@drawable/pin_underline_selector"
+            android:gravity="center"
+            android:textSize="24sp"
+            android:inputType="numberPassword"
+            android:maxLength="1"
+            android:hint="•"
+            android:textColor="@color/text_primary"
+            android:textColorHint="#C0C0C0"
+            android:textCursorDrawable="@null"
+            android:layout_marginEnd="16dp"/>
+
+        <EditText
+            android:id="@+id/pin4"
+            android:layout_width="48dp"
+            android:layout_height="56dp"
+            android:background="@drawable/pin_underline_selector"
+            android:gravity="center"
+            android:textSize="24sp"
+            android:inputType="numberPassword"
+            android:maxLength="1"
+            android:hint="•"
+            android:textColor="@color/text_primary"
+            android:textColorHint="#C0C0C0"
+            android:textCursorDrawable="@null"
+            android:layout_marginEnd="16dp"/>
+
+    </LinearLayout>
+
+    <!-- Enter Button -->
+    <Button
+        android:id="@+id/btn_enter"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:text="ENTER"
+        android:background="@drawable/rounded_button_bg"
+        android:textAllCaps="true"
+        android:textSize="16sp"
+        android:textColor="@android:color/white"
+        android:textStyle="bold" />
+
+</LinearLayout>

@@ -81,7 +81,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp">
 
         <de.hdodenhof.circleimageview.CircleImageView
@@ -146,4 +146,3 @@
         android:enabled="false" />
 
 </LinearLayout>
-

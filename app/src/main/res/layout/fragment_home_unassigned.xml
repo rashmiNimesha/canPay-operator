@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -24,6 +25,7 @@
 
         <!-- Title -->
         <TextView
+            android:id="@+id/tv_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="You're Not Assigned to a Vehicle Yet"
@@ -57,6 +59,7 @@
 
         <!-- Instructions -->
         <TextView
+            android:id="@+id/tv_instructions"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="To get started, ask the vehicle owner to assign you by scanning your QR code or entering your phone number."
@@ -67,14 +70,4 @@
             android:layout_marginBottom="5dp"/>
     </LinearLayout>
 
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottom_nav"
-        android:layout_width="match_parent"
-        android:layout_height="70dp"
-        android:layout_gravity="bottom"
-        android:background="@color/white"
-        app:menu="@menu/bottom_nav_menu"
-        app:itemIconTint="@color/bottom_nav_menu"
-        app:itemTextColor="@color/bottom_nav_menu"
-        app:labelVisibilityMode="labeled" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
