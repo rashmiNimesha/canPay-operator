@@ -127,7 +127,7 @@ public class OtpActivity extends AppCompatActivity {
                     String userId = profile.optString("id", "");  // Changed to String here
 
                     // Save user session with userId as String UUID
-                    PreferenceManager.saveUserSession(OtpActivity.this, userEmail, token, userRole, userName, userId, nic, photo);
+                    PreferenceManager.saveUserSession(OtpActivity.this, userEmail, token, userRole, userName, userId, nic);
                     Log.d(TAG, "Saved session for email: " + userEmail);
 
                     if (isNewUser) {

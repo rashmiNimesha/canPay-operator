@@ -10,4 +10,12 @@ public class Transaction {
         this.description = description;
         this.amount = amount;
     }
+
+    public float getAmount() {
+        return (float) amount;
+    }
+
+    public String getDescription() {
+        return description;
+    }
 }

@@ -69,6 +69,49 @@ public class ApiHelper {
     }
 
 
+    public static void getJson(Context context, String endpoint, String token, Callback callback) {
+        String url = ApiConfig.getBaseUrl() + endpoint;
+        Log.d(TAG, "Getting URL: " + url);
+
+        JsonObjectRequest request = new JsonObjectRequest(
+                Request.Method.GET,
+                url,
+                null,
+                response -> {
+                    Log.d(TAG, "Success response: " + response.toString());
+                    callback.onSuccess(response);
+                },
+                error -> {
+                    Log.e(TAG, "Error in request to " + url, error);
+                    if (error.networkResponse != null) {
+                        Log.e(TAG, "HTTP Status Code: " + error.networkResponse.statusCode);
+                    }
+                    callback.onError(error);
+                }
+        ) {
+            @Override
+            public Map<String, String> getHeaders() {
+                Map<String, String> headers = new HashMap<>();
+                headers.put("Accept", "application/json");
+                if (token != null) {
+                    headers.put("Authorization", "Bearer " + token);
+                    Log.d(TAG, "Added Authorization header: Bearer " + token.substring(0, Math.min(token.length(), 20)) + "...");
+                } else {
+                    Log.w(TAG, "No token provided for request");
+                }
+                return headers;
+            }
+        };
+
+        request.setRetryPolicy(new DefaultRetryPolicy(
+                15000,
+                DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                DefaultRetryPolicy.DEFAULT_BACKOFF_MULT
+        ));
+
+        VolleySingleton.getInstance(context).addToRequestQueue(request);
+    }
+
     public static void patchJson(Context context, String endpoint, JSONObject body, String token, Callback callback) {
         String url = ApiConfig.getBaseUrl() + endpoint;
         Log.d(TAG, "Patching to URL: " + url + ", with body: " + body.toString());
