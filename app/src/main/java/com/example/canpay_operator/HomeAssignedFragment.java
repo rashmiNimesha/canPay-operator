@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.canpay_operator.utils.Endpoints;
 import com.example.canpay_operator.utils.PreferenceManager;
+import com.example.canpay_operator.utils.TransactionStore;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -58,6 +59,13 @@ public class HomeAssignedFragment extends Fragment {
         transactionAdapter = new TransactionAdapter(transactions);
         rvTransactions.setLayoutManager(new LinearLayoutManager(getContext()));
         rvTransactions.setAdapter(transactionAdapter);
+
+        // Load transactions from TransactionStore
+        List<Transaction> transactions = TransactionStore.getTransactions(requireContext());
+        // Replace your current transaction list with this one
+        // For example, if you use a RecyclerView adapter:
+        transactionAdapter.setTransactions(transactions);
+        transactionAdapter.notifyDataSetChanged();
 
         fetchAndDisplayEarnings();
     }

@@ -18,6 +18,13 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         this.transactions = transactions;
     }
 
+    // Add this method to allow updating the transaction list
+    public void setTransactions(List<Transaction> newTransactions) {
+        transactions.clear();
+        transactions.addAll(newTransactions);
+        notifyDataSetChanged(); // Notify the adapter that the data has changed
+    }
+
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {

@@ -15,7 +15,9 @@ import com.example.canpay_operator.config.HiveMqttManager;
 
 import com.example.canpay_operator.utils.ApiHelper;
 import com.example.canpay_operator.utils.Endpoints;
+import com.example.canpay_operator.utils.NotificationStore;
 import com.example.canpay_operator.utils.PreferenceManager;
+import com.example.canpay_operator.utils.TransactionStore;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 import org.json.JSONObject;
@@ -85,10 +87,17 @@ public class HomeActivity extends AppCompatActivity {
                             JSONObject json = new JSONObject(payload);
                             String amount = json.getString("amount");
                             String date = "Today";
-                            // Extract passenger name (from operatorId field as per backend code)
                             String passengerName = json.optString("passengerName", "Passenger");
                             String description = "Payment Received: " + passengerName;
                             Transaction transaction = new Transaction(date, description, Double.parseDouble(amount));
+
+                            // Store transaction in TransactionStore
+                            TransactionStore.addTransaction(getApplicationContext(), transaction);
+
+                            // Store notification in NotificationStore
+                            NotificationStore.getInstance(getApplicationContext()).addNotification(
+                                "Payment received: " + passengerName + " LKR " + amount
+                            );
 
                             Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
                             if (currentFragment instanceof HomeAssignedFragment) {
