@@ -85,13 +85,16 @@ public class HomeActivity extends AppCompatActivity {
                             JSONObject json = new JSONObject(payload);
                             String amount = json.getString("amount");
                             String date = "Today";
-                            Transaction transaction = new Transaction(date, "Payment Received", Double.parseDouble(amount));
+                            // Extract passenger name (from operatorId field as per backend code)
+                            String passengerName = json.optString("passengerName", "Passenger");
+                            String description = "Payment Received: " + passengerName;
+                            Transaction transaction = new Transaction(date, description, Double.parseDouble(amount));
 
                             Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
                             if (currentFragment instanceof HomeAssignedFragment) {
                                 runOnUiThread(() -> ((HomeAssignedFragment) currentFragment).addTransaction(transaction));
                             }
-                            showNotification("Payment received: LKR " + amount);
+                            showNotification("Payment received: " + passengerName + " LKR " + amount);
                         } catch (Exception e) {
                             logger.error("Error processing MQTT message: " + e.getMessage(), e);
                         }
