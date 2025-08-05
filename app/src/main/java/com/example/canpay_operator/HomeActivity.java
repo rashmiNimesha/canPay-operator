@@ -26,7 +26,6 @@ public class HomeActivity extends AppCompatActivity {
     private static final Logger logger = LoggerFactory.getLogger(HomeActivity.class);
     private BottomNavigationView bottomNavigationView;
     private HiveMqttManager mqttManager;
-    private final String busId = "31fe8d9e-e2b0-4ca5-a468-8190a465690a"; // Replace dynamically if needed
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,6 +34,43 @@ public class HomeActivity extends AppCompatActivity {
 
         bottomNavigationView = findViewById(R.id.bottom_nav);
 
+        checkAssignmentStatus();
+
+        bottomNavigationView.setOnItemSelectedListener(item -> {
+            Fragment selectedFragment = null;
+            int id = item.getItemId();
+
+            if (id == R.id.nav_home) {
+                checkAssignmentStatus();
+                return true;
+            } else if (id == R.id.nav_transactions) {
+                selectedFragment = new TransactionsFragment();
+            } else if (id == R.id.nav_notifications) {
+                selectedFragment = new NotificationsFragment();
+            } else if (id == R.id.nav_settings) {
+                selectedFragment = new SettingsFragment();
+            }
+
+            if (selectedFragment != null) {
+                getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.fragment_container, selectedFragment)
+                        .commit();
+                return true;
+            }
+            return false;
+        });
+    }
+
+    private void setupMqttIfAssigned() {
+        String busId = PreferenceManager.getBusID(this);
+        if (busId == null) {
+            logger.warn("No busId found in preferences, MQTT not initialized.");
+            return;
+        }
+        if (mqttManager != null) {
+            mqttManager.disconnect();
+        }
         mqttManager = new HiveMqttManager(busId);
 
         logger.info("Attempting MQTT connect...");
@@ -69,38 +105,12 @@ public class HomeActivity extends AppCompatActivity {
         new android.os.Handler().postDelayed(() -> {
             logger.warn("No MQTT message received after 30 seconds. Check topic, broker, and backend publishing.");
         }, 30000);
-
-        checkAssignmentStatus();
-
-        bottomNavigationView.setOnItemSelectedListener(item -> {
-            Fragment selectedFragment = null;
-            int id = item.getItemId();
-
-            if (id == R.id.nav_home) {
-                checkAssignmentStatus();
-                return true;
-            } else if (id == R.id.nav_transactions) {
-                selectedFragment = new TransactionsFragment();
-            } else if (id == R.id.nav_notifications) {
-                selectedFragment = new NotificationsFragment();
-            } else if (id == R.id.nav_settings) {
-                selectedFragment = new SettingsFragment();
-            }
-
-            if (selectedFragment != null) {
-                getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.fragment_container, selectedFragment)
-                        .commit();
-                return true;
-            }
-            return false;
-        });
     }
 
     private void checkAssignmentStatus() {
         String operatorId = PreferenceManager.getUserId(this);
         String token = PreferenceManager.getToken(this);
+
         String endpoint = Endpoints.GET_OPERATOR_ASSIGNMENT + operatorId;
 
         logger.info("Checking assignment status for operatorId: " + operatorId);
@@ -119,9 +129,13 @@ public class HomeActivity extends AppCompatActivity {
                             String busID = bus.optString("id", null);
                             if (busNumber != null) {
                                 PreferenceManager.setBusNumber(HomeActivity.this, busNumber);
+                            }
+                            if (busID != null) {
                                 PreferenceManager.setBusID(HomeActivity.this, busID);
                             }
                         }
+                        // Setup MQTT only if assigned
+                        runOnUiThread(() -> setupMqttIfAssigned());
                     }
                 } else {
                     assigned = false;
@@ -172,6 +186,8 @@ public class HomeActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mqttManager.disconnect();
+        if (mqttManager != null) {
+            mqttManager.disconnect();
+        }
     }
 }
