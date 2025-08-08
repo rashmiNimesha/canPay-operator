@@ -55,6 +55,16 @@ public class HomeAssignedFragment extends Fragment {
         rvTransactions = view.findViewById(R.id.rv_transactions);
         layoutNoTransactions = view.findViewById(R.id.layout_no_transactions);
 
+        // 🟢 Connected message logic
+        TextView tvConnectionMessage = view.findViewById(R.id.tv_connection_message);
+        String busNumber = PreferenceManager.getBusNumber(requireContext());
+        if (busNumber != null && !busNumber.isEmpty()) {
+            tvConnectionMessage.setVisibility(View.VISIBLE);
+            tvConnectionMessage.setText("Connected to vehicle " + busNumber);
+        } else {
+            tvConnectionMessage.setVisibility(View.GONE);
+        }
+
         transactions = new ArrayList<>();
         transactionAdapter = new TransactionAdapter(transactions);
         rvTransactions.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -62,14 +72,11 @@ public class HomeAssignedFragment extends Fragment {
 
         // Load transactions from TransactionStore
         List<Transaction> transactions = TransactionStore.getTransactions(requireContext());
-        // Replace your current transaction list with this one
-        // For example, if you use a RecyclerView adapter:
         transactionAdapter.setTransactions(transactions);
         transactionAdapter.notifyDataSetChanged();
 
         fetchAndDisplayEarnings();
     }
-
 
     private void fetchAndDisplayEarnings() {
         String name = PreferenceManager.getUserName(requireContext());
@@ -81,6 +88,7 @@ public class HomeAssignedFragment extends Fragment {
         tvName.setText(name);
         tvBusNumber.setText(busNumber);
         transactions.addAll(loadTransactions());
+
         if (operatorId == null || busID == null || token == null) {
             tvEarnings.setText("LKR 0.00");
             return;
@@ -92,11 +100,6 @@ public class HomeAssignedFragment extends Fragment {
         } else {
             layoutNoTransactions.setVisibility(View.GONE);
             rvTransactions.setVisibility(View.VISIBLE);
-        }
-
-        if (operatorId == null || busID == null || token == null) {
-            tvEarnings.setText("LKR 0.00");
-            return;
         }
 
         String endpoint = Endpoints.GET_OPERATOR_FINANCE_DETAILS + "?busId=" + busID + "&operatorId=" + operatorId;

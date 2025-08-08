@@ -28,6 +28,20 @@
                 android:contentDescription="@string/canpay_logo"
                 android:layout_marginBottom="12dp" />
 
+            <!-- Connection Message -->
+            <TextView
+                android:id="@+id/tv_connection_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Connected to vehicle ND-1234"
+                android:textSize="14sp"
+                android:textColor="@color/button_green"
+                android:background="@drawable/bg_connection_message"
+                android:padding="8dp"
+                android:layout_marginBottom="16dp"
+                android:visibility="gone" />
+
+
             <!-- Balance Card -->
             <androidx.cardview.widget.CardView
                 android:id="@+id/card_info"

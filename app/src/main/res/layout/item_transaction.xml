@@ -31,13 +31,4 @@
         android:textColor="@color/button_green"
         android:layout_gravity="end"/>
 
-    <com.google.android.material.bottomnavigation.BottomNavigationView
-        android:id="@+id/bottom_nav"
-        android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:layout_gravity="bottom"
-        app:menu="@menu/bottom_nav_menu"
-        app:itemIconTint="@color/bottom_nav_menu"
-        app:itemTextColor="@color/bottom_nav_menu"
-        android:background="?attr/colorSurface" />
 </LinearLayout>
