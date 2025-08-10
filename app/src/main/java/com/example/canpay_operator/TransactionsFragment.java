@@ -12,6 +12,14 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.android.volley.VolleyError;
+import com.example.canpay_operator.utils.ApiHelper;
+import com.example.canpay_operator.utils.Endpoints;
+import com.example.canpay_operator.utils.PreferenceManager;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,7 +28,6 @@ public class TransactionsFragment extends Fragment {
     private RecyclerView rvTransactions;
     private LinearLayout layoutNoTransactions;
     private TransactionAdapter transactionAdapter;
-    private List<Transaction> transactionList;
 
     public TransactionsFragment() {
         // Required empty public constructor
@@ -41,30 +48,63 @@ public class TransactionsFragment extends Fragment {
         rvTransactions = view.findViewById(R.id.rv_transactions);
         layoutNoTransactions = view.findViewById(R.id.layout_no_transactions);
 
-        // Load transactions (replace with real backend/API call)
-        transactionList = loadTransactions();
+        rvTransactions.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        if (transactionList.isEmpty()) {
-            layoutNoTransactions.setVisibility(View.VISIBLE);
-            rvTransactions.setVisibility(View.GONE);
-        } else {
-            layoutNoTransactions.setVisibility(View.GONE);
-            rvTransactions.setVisibility(View.VISIBLE);
-
-            rvTransactions.setLayoutManager(new LinearLayoutManager(getContext()));
-            transactionAdapter = new TransactionAdapter(transactionList);
-            rvTransactions.setAdapter(transactionAdapter);
-        }
+        // Call new fetchTransactions() method for API integration
+        fetchTransactions();
     }
 
-    // Dummy data loader - replace with your real data source
-    private List<Transaction> loadTransactions() {
-        List<Transaction> list = new ArrayList<>();
-        // Uncomment below to test with sample data:
-        /*
-        list.add(new Transaction("Nov 18, 2024", "Payment Received", 970.00));
-        list.add(new Transaction("Nov 18, 2024", "Payment Received", 570.00));
-        */
-        return list;
+    private void fetchTransactions() {
+        // Hardcoded busId and operatorId; adjust as needed.
+        String busId = PreferenceManager.getBusID(getContext());
+        String operatorId = PreferenceManager.getUserId(getContext());
+        String endpoint = String.format(Endpoints.GET_RECENT_TRANSACTIONS, busId, operatorId);
+        String token = PreferenceManager.getToken(getContext());
+
+        ApiHelper.getJson(getContext(), endpoint, token, new ApiHelper.Callback()  {
+            @Override
+            public void onSuccess(JSONObject response) {
+                try {
+                    JSONArray dataArray = response.getJSONArray("data");
+                    final List<Transaction> transactions = new ArrayList<>();
+                    for (int i = 0; i < dataArray.length(); i++) {
+                        JSONObject tx = dataArray.getJSONObject(i);
+                        // Using 'happenedAt' for date and 'note' as description.
+                        transactions.add(new Transaction(
+                                tx.getString("happenedAt"),
+                                tx.getString("note"),
+                                tx.getDouble("amount")
+                        ));
+                    }
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (transactions.isEmpty()) {
+                                    layoutNoTransactions.setVisibility(View.VISIBLE);
+                                    rvTransactions.setVisibility(View.GONE);
+                                } else {
+                                    layoutNoTransactions.setVisibility(View.GONE);
+                                    rvTransactions.setVisibility(View.VISIBLE);
+                                    if (transactionAdapter == null) {
+                                        transactionAdapter = new TransactionAdapter(transactions);
+                                        rvTransactions.setAdapter(transactionAdapter);
+                                    } else {
+                                        transactionAdapter.setTransactions(transactions);
+                                    }
+                                }
+                            }
+                        });
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onError(VolleyError error) {
+
+            }
+        });
     }
 }

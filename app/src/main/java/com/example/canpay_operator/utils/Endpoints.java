@@ -6,4 +6,6 @@ public class Endpoints {
     public static final String SAVE_USER_PROFILE = "/api/v1/auth/create-profile";
     public static final String GET_OPERATOR_ASSIGNMENT = "/api/v1/operator-assignment/assignment-status/";
     public static final String GET_OPERATOR_FINANCE_DETAILS = "/api/v1/user-service/operator/financial-details";
+
+    public static final String GET_RECENT_TRANSACTIONS = "/api/v1/transactions/bus/%s/operator/%s/recent";
 }
