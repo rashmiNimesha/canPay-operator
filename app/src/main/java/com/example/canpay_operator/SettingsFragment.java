@@ -15,6 +15,8 @@ import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 
+import com.example.canpay_operator.utils.PreferenceManager;
+
 public class SettingsFragment extends Fragment {
 
     private TextView tvAssignedBus, tvName, tvPhone, tvNIC;
@@ -65,12 +67,10 @@ public class SettingsFragment extends Fragment {
     }
 
     private void loadUserDetailsFromPrefs() {
-        SharedPreferences prefs = requireActivity().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-
-        String assignedBus = prefs.getString("bus_number", "ND - 1234");
-        String operatorName = prefs.getString("operator_name", "Gamage");
-        String operatorPhone = prefs.getString("operator_phone", "+94 71 12 12 123");
-        String operatorNIC = prefs.getString("operator_nic", "2000XXXXXXXXX");
+        String assignedBus = PreferenceManager.getBusNumber(getContext());
+        String operatorName = PreferenceManager.getUserName(getContext());
+        String operatorPhone = PreferenceManager.getEmail(getContext());
+        String operatorNIC = PreferenceManager.getNic(getContext());
 
         tvAssignedBus.setText(assignedBus);
         tvName.setText(operatorName);
@@ -92,8 +92,9 @@ public class SettingsFragment extends Fragment {
         btnLogout.setOnClickListener(v -> {
             dialog.dismiss();
             // Clear session or preferences on logout
-            SharedPreferences prefs = requireActivity().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-            prefs.edit().clear().apply();
+           // SharedPreferences prefs = requireActivity().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+          //  prefs.edit().clear().apply();
+            PreferenceManager.clearSession(getContext());
 
             // Navigate to LoginActivity and clear back stack
             Intent intent = new Intent(getActivity(), LoginActivity.class);
