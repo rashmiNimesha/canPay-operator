@@ -115,7 +115,6 @@
                         android:id="@+id/tv_earnings"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="LKR 7,950.00"
                         android:textColor="@color/white"
                         android:textSize="24sp"
                         android:textStyle="bold"

@@ -149,7 +149,7 @@ public class HomeAssignedFragment extends Fragment {
 
             // Update earnings
             SharedPreferences prefs = requireActivity().getSharedPreferences(PREFS_NAME, getActivity().MODE_PRIVATE);
-            float currentEarnings = prefs.getFloat("earnings", 7950.00f);
+            float currentEarnings = prefs.getFloat("earnings", 0);
             float newEarnings = (float) (currentEarnings + transaction.getAmount());
             tvEarnings.setText(String.format("LKR %,.2f", newEarnings));
             prefs.edit().putFloat("earnings", newEarnings).apply();
