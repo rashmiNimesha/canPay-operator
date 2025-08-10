@@ -54,15 +54,23 @@ public class CurrentPinActivity extends AppCompatActivity {
                     } else if (s.length() == 0 && currentIndex > 0) {
                         pinFields[currentIndex - 1].requestFocus();
                     }
-                    if (isAllFieldsFilled()) validatePin();
                 }
 
                 @Override
                 public void afterTextChanged(Editable s) {
                     String input = s.toString();
-                    if (!input.isEmpty() && !input.matches("\\d")) {
-                        pinFields[currentIndex].setText("");
-                        showError("Only numbers are allowed");
+
+                    // Enforce numeric only and single digit
+                    if (!input.isEmpty()) {
+                        if (!input.matches("\\d")) {
+                            pinFields[currentIndex].setText("");
+                            showError("Only numbers are allowed");
+                        } else if (input.length() > 1) {
+                            // If user pasted multiple characters, keep only the first digit
+                            pinFields[currentIndex].setText(String.valueOf(input.charAt(0)));
+                            pinFields[currentIndex].setSelection(1);
+                            showError("Only one digit per field");
+                        }
                     }
                 }
             });
@@ -89,14 +97,15 @@ public class CurrentPinActivity extends AppCompatActivity {
 
     private boolean isAllFieldsFilled() {
         for (EditText field : pinFields) {
-            if (field.getText().toString().trim().isEmpty()) return false;
+            String val = field.getText().toString().trim();
+            if (val.isEmpty() || !val.matches("\\d")) return false;
         }
         return true;
     }
 
     private void validatePin() {
         if (!isAllFieldsFilled()) {
-            showError("Please enter complete 4-digit PIN");
+            showError("Please enter a complete 4-digit numeric PIN");
             return;
         }
 

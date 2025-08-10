@@ -5,10 +5,8 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
-
 
 public class NameActivity extends AppCompatActivity {
     @Override
@@ -29,7 +27,7 @@ public class NameActivity extends AppCompatActivity {
             finish();
         });
 
-        // NEXT button: validate and go to nic
+        // NEXT button: validate and go to NICEntryActivity
         btnNext.setOnClickListener(v -> {
             String name = etName.getText().toString().trim();
 
@@ -38,13 +36,41 @@ public class NameActivity extends AppCompatActivity {
                 return;
             }
 
-            // Pass name and email to NIC entry screen
+            if (name.length() < 3) {
+                etName.setError("Name must be at least 3 characters");
+                return;
+            }
+
+            if (name.length() > 50) {
+                etName.setError("Name cannot exceed 50 characters");
+                return;
+            }
+
+            // Check for digits
+            if (name.matches(".*\\d.*")) {
+                etName.setError("Name cannot contain numbers");
+                return;
+            }
+
+            // Check spaces count (max one space)
+            int spaceCount = name.length() - name.replace(" ", "").length();
+            if (spaceCount > 1) {
+                etName.setError("Name can contain at most one space");
+                return;
+            }
+
+            // Optional: validate allowed characters (letters, space, apostrophes, hyphens)
+            if (!name.matches("^[a-zA-Z'\\- ]+$")) {
+                etName.setError("Name contains invalid characters");
+                return;
+            }
+
+            // Passed all checks, proceed
             Intent intent = new Intent(NameActivity.this, NICEntryActivity.class);
             intent.putExtra("name", name);
             intent.putExtra("email", email);
             startActivity(intent);
             finish();
         });
-
     }
 }

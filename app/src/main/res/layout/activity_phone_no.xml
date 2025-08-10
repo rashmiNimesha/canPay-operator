@@ -61,7 +61,7 @@
         android:layout_height="56dp"
         android:hint="Enter your email address"
         android:inputType="text"
-        android:drawableEnd="@drawable/ic_phone"
+        android:drawableEnd="@drawable/ic_email"
         android:drawablePadding="5dp"
         android:background="@drawable/edittext_outline"
         android:padding="16dp"

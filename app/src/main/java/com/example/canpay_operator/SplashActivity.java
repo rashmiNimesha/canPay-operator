@@ -11,13 +11,14 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class SplashActivity extends AppCompatActivity {
     private static final String TAG = "SplashActivity";
@@ -26,6 +27,10 @@ public class SplashActivity extends AppCompatActivity {
     private static final String KEY_JWT_TOKEN = "jwt_token";  // Store your JWT token here
 
     private static final int SPLASH_DELAY = 2000; // 2 seconds delay
+
+    // ✅ Correct backend endpoint for token validation
+    private static final String VALIDATE_TOKEN_URL =
+            "http://10.0.2.2:8081/api/v1/auth/validate-token";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,27 +45,33 @@ public class SplashActivity extends AppCompatActivity {
         String token = prefs.getString(KEY_JWT_TOKEN, null);
 
         if (token == null || token.isEmpty()) {
-            // No token saved, go to LoginActivity
+            Log.d(TAG, "No token found, going to login.");
             navigateToLogin();
             return;
         }
 
-        String url = "http://10.0.2.2:8081";
+        Log.d(TAG, "Found token: " + token);
 
         RequestQueue queue = Volley.newRequestQueue(this);
 
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
                 Request.Method.GET,
-                url,
+                VALIDATE_TOKEN_URL,
                 null,
                 response -> {
+                    Log.d(TAG, "Server response: " + response.toString());
                     try {
                         boolean success = response.getBoolean("success");
+                        String action = response.optString("action", "").toLowerCase();
+
                         if (success) {
-                            // Token valid, go to PinLoginActivity
-                            navigateToPinLogin();
+                            if ("pin".equals(action)) {
+                                navigateToPinLogin();
+                            } else {
+                                // If action is something else, default to LoginActivity for now
+                                navigateToLogin();
+                            }
                         } else {
-                            // Token invalid or expired, go to LoginActivity
                             navigateToLogin();
                         }
                     } catch (JSONException e) {
@@ -69,14 +80,16 @@ public class SplashActivity extends AppCompatActivity {
                     }
                 },
                 error -> {
-                    Log.e(TAG, "Volley error: " + error.getMessage());
-                    Toast.makeText(SplashActivity.this, "Network error. Please try again.", Toast.LENGTH_SHORT).show();
+                    Log.e(TAG, "Volley error: " + error.toString());
+                    Toast.makeText(SplashActivity.this,
+                            "Network error. Please try again.",
+                            Toast.LENGTH_SHORT).show();
                     navigateToLogin();
                 }
         ) {
             @Override
-            public java.util.Map<String, String> getHeaders() {
-                java.util.Map<String, String> headers = new java.util.HashMap<>();
+            public Map<String, String> getHeaders() {
+                Map<String, String> headers = new HashMap<>();
                 headers.put("Authorization", "Bearer " + token);
                 return headers;
             }

@@ -54,7 +54,6 @@ public class ConfirmPinCodeActivity extends AppCompatActivity {
                 }
 
                 if (enteredPin.equals(savedPin)) {
-                    // Optionally: you can also validate token here if needed
                     String token = PreferenceManager.getToken(this);
                     if (token == null || token.isEmpty()) {
                         Toast.makeText(this, "Authorization token missing", Toast.LENGTH_SHORT).show();
@@ -86,6 +85,16 @@ public class ConfirmPinCodeActivity extends AppCompatActivity {
                 @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
                 @Override
                 public void afterTextChanged(Editable s) {
+                    String input = s.toString();
+                    if (!input.isEmpty() && !input.matches("\\d")) {
+                        pins[index].setText("");
+                        pins[index].setError("Only numbers allowed");
+                        return;
+                    }
+                    if (input.length() > 1) {
+                        pins[index].setText(input.substring(0, 1)); // keep only first digit
+                        pins[index].setSelection(1);
+                    }
                     if (s.length() == 1 && index < pins.length - 1) {
                         pins[index + 1].requestFocus();
                     } else if (s.length() == 0 && index > 0) {
@@ -98,14 +107,23 @@ public class ConfirmPinCodeActivity extends AppCompatActivity {
 
     private boolean validatePinInputs() {
         EditText[] pins = {pin1, pin2, pin3, pin4};
+        boolean isValid = true;
+
         for (EditText pin : pins) {
             String digit = pin.getText().toString().trim();
-            if (digit.isEmpty() || !digit.matches("\\d")) {
-                Toast.makeText(this, "PIN must be 4 numeric digits", Toast.LENGTH_SHORT).show();
-                return false;
+            if (digit.isEmpty()) {
+                pin.setError("Required");
+                isValid = false;
+            } else if (!digit.matches("\\d")) {
+                pin.setError("Must be a number");
+                isValid = false;
             }
         }
-        return true;
+
+        if (!isValid) {
+            Toast.makeText(this, "PIN must be 4 numeric digits", Toast.LENGTH_SHORT).show();
+        }
+        return isValid;
     }
 
     private String getPinFromInputs() {

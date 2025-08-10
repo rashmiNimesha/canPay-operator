@@ -25,8 +25,27 @@ public class NICEntryActivity extends AppCompatActivity {
 
         btnNext.setOnClickListener(v -> {
             String nic = etNic.getText().toString().trim();
+
             if (TextUtils.isEmpty(nic)) {
                 etNic.setError("Please enter your NIC number");
+                etNic.requestFocus();
+                return;
+            }
+
+            // Validate NIC format
+            boolean isValid = false;
+
+            // Pattern 1: 12 digits exactly
+            if (nic.matches("\\d{12}")) {
+                isValid = true;
+            }
+            // Pattern 2: 9 digits followed by V or v
+            else if (nic.matches("\\d{9}[Vv]")) {
+                isValid = true;
+            }
+
+            if (!isValid) {
+                etNic.setError("NIC must be 12 digits OR 9 digits followed by 'V' or 'v'");
                 etNic.requestFocus();
                 return;
             }

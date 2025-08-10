@@ -48,7 +48,7 @@ public class OtpActivity extends AppCompatActivity {
         ImageButton btnBack = findViewById(R.id.btn_back);
         email = getIntent().getStringExtra("email");
 
-        // Auto move focus between OTP boxes
+        // Auto move focus between OTP boxes + digit validation
         for (int i = 0; i < otpBoxes.length; i++) {
             final int index = i;
             otpBoxes[i].addTextChangedListener(new TextWatcher() {
@@ -56,9 +56,15 @@ public class OtpActivity extends AppCompatActivity {
                 @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
                 @Override
                 public void afterTextChanged(Editable s) {
-                    if (s.length() == 1 && index < otpBoxes.length - 1) {
+                    String input = s.toString();
+                    if (!input.matches("\\d?")) {  // Only allow single digit or empty
+                        otpBoxes[index].setError("Only digits (0-9) allowed");
+                        otpBoxes[index].setText("");
+                        return;
+                    }
+                    if (input.length() == 1 && index < otpBoxes.length - 1) {
                         otpBoxes[index + 1].requestFocus();
-                    } else if (s.length() == 0 && index > 0) {
+                    } else if (input.length() == 0 && index > 0) {
                         otpBoxes[index - 1].requestFocus();
                     }
                 }
@@ -90,6 +96,10 @@ public class OtpActivity extends AppCompatActivity {
             String digit = box.getText().toString().trim();
             if (digit.isEmpty()) {
                 Toast.makeText(this, "Enter all 6 digits", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            if (!digit.matches("\\d")) {
+                Toast.makeText(this, "Only digits allowed in OTP", Toast.LENGTH_SHORT).show();
                 return;
             }
             otp.append(digit);
@@ -124,9 +134,8 @@ public class OtpActivity extends AppCompatActivity {
                     String userName = profile.optString("name", null);
                     String photo = profile.optString("photo", null);
                     String nic = profile.optString("nic", null);
-                    String userId = profile.optString("id", "");  // Changed to String here
+                    String userId = profile.optString("id", "");
 
-                    // Save user session with userId as String UUID
                     PreferenceManager.saveUserSession(OtpActivity.this, userEmail, token, userRole, userName, userId, nic);
                     Log.d(TAG, "Saved session for email: " + userEmail);
 

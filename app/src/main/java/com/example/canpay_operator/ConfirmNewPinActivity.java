@@ -29,8 +29,8 @@ public class ConfirmNewPinActivity extends AppCompatActivity {
         setContentView(R.layout.activity_confirm_new_pin);
 
         originalPin = getIntent().getStringExtra("new_pin");
-        if (originalPin == null || originalPin.isEmpty()) {
-            Toast.makeText(this, "Error: No PIN to confirm", Toast.LENGTH_SHORT).show();
+        if (originalPin == null || !originalPin.matches("\\d{4}")) {
+            Toast.makeText(this, "Error: Invalid PIN to confirm", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
@@ -60,11 +60,13 @@ public class ConfirmNewPinActivity extends AppCompatActivity {
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
                     pinFields[currentIndex].setError(null);
+
                     if (s.length() == 1 && currentIndex < 3) {
                         pinFields[currentIndex + 1].requestFocus();
                     } else if (s.length() == 0 && currentIndex > 0) {
                         pinFields[currentIndex - 1].requestFocus();
                     }
+
                     if (isAllFieldsFilled()) validateAndSubmitPin();
                 }
 
@@ -73,7 +75,8 @@ public class ConfirmNewPinActivity extends AppCompatActivity {
                     String input = s.toString();
                     if (!input.isEmpty() && !input.matches("\\d")) {
                         pinFields[currentIndex].setText("");
-                        showError("Only numbers are allowed");
+                        pinFields[currentIndex].setError("Only numbers allowed");
+                        Toast.makeText(ConfirmNewPinActivity.this, "Only numbers are allowed", Toast.LENGTH_SHORT).show();
                     }
                 }
             });
@@ -113,6 +116,13 @@ public class ConfirmNewPinActivity extends AppCompatActivity {
 
         String confirmPin = getCurrentPin();
 
+        // Extra length check
+        if (!confirmPin.matches("\\d{4}")) {
+            showError("PIN must be exactly 4 digits");
+            clearAllFields();
+            return;
+        }
+
         if (attemptCount >= MAX_ATTEMPTS) {
             showError("Too many failed attempts. Please try again later.");
             navigateToFailedScreen("Maximum attempts exceeded");
@@ -134,7 +144,9 @@ public class ConfirmNewPinActivity extends AppCompatActivity {
 
     private String getCurrentPin() {
         StringBuilder pin = new StringBuilder();
-        for (EditText field : pinFields) pin.append(field.getText().toString().trim());
+        for (EditText field : pinFields) {
+            pin.append(field.getText().toString().trim());
+        }
         return pin.toString();
     }
 
@@ -164,7 +176,6 @@ public class ConfirmNewPinActivity extends AppCompatActivity {
 
     private void showError(String message) {
         Toast.makeText(this, message, Toast.LENGTH_LONG).show();
-        for (EditText field : pinFields) field.setError("");
     }
 
     private void clearAllFields() {

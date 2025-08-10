@@ -5,7 +5,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.InputFilter;
 import android.text.TextWatcher;
+import android.text.method.DigitsKeyListener;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
@@ -15,8 +17,6 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 
@@ -66,11 +66,24 @@ public class PinLoginActivity extends AppCompatActivity {
 
         for (int i = 0; i < pins.length; i++) {
             final int index = i;
-            pins[i].addTextChangedListener(new TextWatcher() {
+            EditText pinField = pins[i];
+
+            // Add filters: max length 1, only digits allowed
+            pinField.setFilters(new InputFilter[]{new InputFilter.LengthFilter(1)});
+            pinField.setKeyListener(DigitsKeyListener.getInstance("0123456789"));
+
+            pinField.addTextChangedListener(new TextWatcher() {
                 @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
                 @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
                 @Override
                 public void afterTextChanged(Editable s) {
+                    // Immediate check: only allow empty or single digit
+                    if (!s.toString().matches("\\d?")) { // empty or 1 digit
+                        pinField.setError("Only digits allowed");
+                        pinField.setText("");
+                        return;
+                    }
+                    // Auto-move focus
                     if (s.length() == 1 && index < pins.length - 1) {
                         pins[index + 1].requestFocus();
                     } else if (s.length() == 0 && index > 0) {
@@ -103,7 +116,6 @@ public class PinLoginActivity extends AppCompatActivity {
                     try {
                         boolean success = response.getBoolean("success");
                         if (success) {
-                            // Token valid, proceed to PIN validation
                             validatePinAndLogin();
                         } else {
                             Toast.makeText(this, "Session expired. Please login again.", Toast.LENGTH_LONG).show();
@@ -149,7 +161,6 @@ public class PinLoginActivity extends AppCompatActivity {
         }
 
         if (enteredPin.equals(savedPin)) {
-            // PIN correct, navigate to HomeActivity
             Intent intent = new Intent(PinLoginActivity.this, HomeActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
