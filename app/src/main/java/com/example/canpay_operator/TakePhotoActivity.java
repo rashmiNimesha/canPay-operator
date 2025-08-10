@@ -1,5 +1,7 @@
 package com.example.canpay_operator;
 
+import static com.android.volley.VolleyLog.TAG;
+
 import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
@@ -28,6 +30,7 @@ import com.example.canpay_operator.utils.ApiHelper;
 import com.example.canpay_operator.utils.Endpoints;
 import com.example.canpay_operator.utils.PreferenceManager;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
@@ -193,12 +196,30 @@ public class TakePhotoActivity extends AppCompatActivity {
             ApiHelper.postJson(this, Endpoints.SAVE_USER_PROFILE, jsonBody, authToken, new ApiHelper.Callback() {
                 @Override
                 public void onSuccess(JSONObject response) {
+                    try {
+                        JSONObject data = response.getJSONObject("data");
+                        JSONObject profile = data.getJSONObject("profile");
+                        String token = data.getString("token");
+                        String userEmail = profile.getString("email");
+                        String userRole = profile.getString("role");
+                        String userName = profile.optString("name", null);
+                        String photo = profile.optString("photo", null);
+                        String nic = profile.optString("nic", null);
+                        String userId = profile.optString("id", "");
+                        PreferenceManager.saveUserSession(TakePhotoActivity.this, userEmail, token, userRole, userName, userId, nic);
+                        Log.d(TAG, "Saved session for email: " + userEmail);
+
+                    }
+                    catch (JSONException e) {
+                        Log.e(TAG, "Error parsing response", e);
+                        Toast.makeText(TakePhotoActivity.this, "Invalid server response", Toast.LENGTH_SHORT).show();
+                    }
+
+
                     btnNext.setEnabled(true);
-                    Toast.makeText(TakePhotoActivity.this, "Profile completed successfully!", Toast.LENGTH_SHORT).show();
 
                     Intent intent = new Intent(TakePhotoActivity.this, PinCodeActivity.class);
-                    intent.putExtra("email", email);
-                    intent.putExtra("token", authToken);
+
                     startActivity(intent);
                     finish();
                 }

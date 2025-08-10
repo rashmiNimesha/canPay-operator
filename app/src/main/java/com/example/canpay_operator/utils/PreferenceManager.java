@@ -230,6 +230,17 @@ public class PreferenceManager {
         }
     }
 
+    public static void setNic(Context context, String nic) {
+        try {
+            SharedPreferences prefs = getEncryptedPrefs(context);
+            prefs.edit().putString(KEY_NIC, nic).apply();
+            Log.d(TAG, "Set NIC: " + nic);
+        } catch (Exception e) {
+            Log.e(TAG, "Error setting NIC", e);
+            throw new RuntimeException("Failed to set NIC", e);
+        }
+    }
+
     public static void setBusNumber(Context context, String busNumber) {
         SharedPreferences prefs = getEncryptedPrefs(context);
         prefs.edit().putString(KEY_BUS_PLATE_NUMBER, busNumber).apply();
