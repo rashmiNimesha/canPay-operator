@@ -1,5 +1,6 @@
 package com.example.canpay_operator;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -12,9 +13,14 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.android.volley.VolleyError;
+import com.example.canpay_operator.utils.ApiHelper;
+import com.example.canpay_operator.utils.Endpoints;
+import com.example.canpay_operator.utils.PreferenceManager;
 import com.google.zxing.BarcodeFormat;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
-import com.example.canpay_operator.utils.PreferenceManager;
+
+import org.json.JSONObject;
 
 public class HomeUnassignedFragment extends Fragment {
 
@@ -44,6 +50,7 @@ public class HomeUnassignedFragment extends Fragment {
         tvInstructions = view.findViewById(R.id.tv_instructions);
 
         generateQrWithUserData();
+        checkAssignmentStatus();
     }
 
     private void generateQrWithUserData() {
@@ -67,5 +74,39 @@ public class HomeUnassignedFragment extends Fragment {
             imgQr.setImageResource(R.drawable.ic_no_transactions);
             tvInstructions.setText("User ID is not available.");
         }
+    }
+
+    // New method to check assignment status asynchronously
+    private void checkAssignmentStatus() {
+        String operatorId = PreferenceManager.getUserId(requireContext());
+        String token = PreferenceManager.getToken(requireContext());
+
+        if (operatorId == null || operatorId.isEmpty()) {
+            return;
+        }
+
+        String endpoint = Endpoints.GET_OPERATOR_ASSIGNMENT + operatorId;
+
+        ApiHelper.getJson(requireContext(), endpoint, token, new ApiHelper.Callback() {
+            @Override
+            public void onSuccess(JSONObject response) {
+                JSONObject data = response.optJSONObject("data");
+                boolean assigned = data != null && data.optBoolean("assigned", false);
+                if (assigned) {
+                    // If assigned, start HomeActivity and finish current activity if needed
+                    if (getActivity() != null) {
+                        Intent intent = new Intent(getActivity(), HomeActivity.class);
+                        startActivity(intent);
+                        getActivity().finish();
+                    }
+                }
+                // else remain in HomeUnassignedFragment, no action needed
+            }
+
+            @Override
+            public void onError(VolleyError error) {
+                // On error, do not change the current fragment
+            }
+        });
     }
 }
