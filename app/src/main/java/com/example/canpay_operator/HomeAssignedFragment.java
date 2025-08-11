@@ -14,10 +14,13 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.android.volley.VolleyError;
+import com.example.canpay_operator.utils.ApiHelper;
 import com.example.canpay_operator.utils.Endpoints;
 import com.example.canpay_operator.utils.PreferenceManager;
-import com.example.canpay_operator.utils.TransactionStore;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,12 +73,76 @@ public class HomeAssignedFragment extends Fragment {
         rvTransactions.setLayoutManager(new LinearLayoutManager(getContext()));
         rvTransactions.setAdapter(transactionAdapter);
 
-        // Load transactions from TransactionStore
-        List<Transaction> transactions = TransactionStore.getTransactions(requireContext());
-        transactionAdapter.setTransactions(transactions);
-        transactionAdapter.notifyDataSetChanged();
+        // Replace TransactionStore with API call
+        fetchTransactions();
 
         fetchAndDisplayEarnings();
+    }
+
+    private void fetchTransactions() {
+        String busId = PreferenceManager.getBusID(getContext());
+        String operatorId = PreferenceManager.getUserId(getContext());
+        String token = PreferenceManager.getToken(getContext());
+
+        if (busId == null || operatorId == null || token == null) {
+            layoutNoTransactions.setVisibility(View.VISIBLE);
+            rvTransactions.setVisibility(View.GONE);
+            return;
+        }
+
+        String endpoint = String.format(Endpoints.GET_RECENT_TRANSACTIONS, busId, operatorId);
+
+        ApiHelper.getJson(getContext(), endpoint, token, new ApiHelper.Callback() {
+            @Override
+            public void onSuccess(JSONObject response) {
+                try {
+                    JSONArray dataArray = response.getJSONArray("data");
+                    List<Transaction> fetchedTransactions = new ArrayList<>();
+
+                    for (int i = 0; i < dataArray.length(); i++) {
+                        JSONObject tx = dataArray.getJSONObject(i);
+                        fetchedTransactions.add(new Transaction(
+                                tx.getString("happenedAt"),
+                                tx.getString("note"),
+                                tx.getDouble("amount")
+                        ));
+                    }
+
+                    if (getActivity() != null) {
+                        getActivity().runOnUiThread(() -> {
+                            transactions.clear();
+                            transactions.addAll(fetchedTransactions);
+                            transactionAdapter.notifyDataSetChanged();
+
+                            if (transactions.isEmpty()) {
+                                layoutNoTransactions.setVisibility(View.VISIBLE);
+                                rvTransactions.setVisibility(View.GONE);
+                            } else {
+                                layoutNoTransactions.setVisibility(View.GONE);
+                                rvTransactions.setVisibility(View.VISIBLE);
+                            }
+                        });
+                    }
+                } catch (Exception e) {
+                    logger.error("Error parsing transactions: " + e.getMessage(), e);
+                }
+            }
+
+            @Override
+            public void onError(VolleyError error) {
+                logger.error("Error fetching transactions: " + error.getMessage());
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(() -> {
+                        layoutNoTransactions.setVisibility(View.VISIBLE);
+                        rvTransactions.setVisibility(View.GONE);
+                    });
+                }
+            }
+        });
+    }
+
+    public void refreshTransactions() {
+        fetchTransactions();
     }
 
     private void fetchAndDisplayEarnings() {
@@ -130,31 +197,7 @@ public class HomeAssignedFragment extends Fragment {
     }
 
     private List<Transaction> loadTransactions() {
-        List<Transaction> list = new ArrayList<>();
-        // TODO: Replace with real data loading logic (e.g., from API or database)
-        /*
-        list.add(new Transaction("Nov 18, 2024", "Payment Received", 970.00));
-        list.add(new Transaction("Nov 18, 2024", "Payment Received", 570.00));
-        */
-        return list;
-    }
-
-    public void addTransaction(Transaction transaction) {
-        if (transactions != null && transactionAdapter != null) {
-            transactions.add(0, transaction); // Add to top of list
-            transactionAdapter.notifyItemInserted(0);
-            rvTransactions.scrollToPosition(0);
-            layoutNoTransactions.setVisibility(View.GONE);
-            rvTransactions.setVisibility(View.VISIBLE);
-
-            // Update earnings
-            SharedPreferences prefs = requireActivity().getSharedPreferences(PREFS_NAME, getActivity().MODE_PRIVATE);
-            float currentEarnings = prefs.getFloat("earnings", 0);
-            float newEarnings = (float) (currentEarnings + transaction.getAmount());
-            tvEarnings.setText(String.format("LKR %,.2f", newEarnings));
-            prefs.edit().putFloat("earnings", newEarnings).apply();
-
-            logger.info("Added transaction: " + transaction.getDescription() + ", " + transaction.getAmount());
-        }
+        // Remove hardcoded transactions, now fetched from API
+        return new ArrayList<>();
     }
 }
