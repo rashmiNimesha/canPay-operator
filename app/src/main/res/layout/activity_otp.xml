@@ -35,7 +35,7 @@
         android:id="@+id/tv_otp_subtitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="A code was sent to 07XXXXXXXX."
+        android:text="A code was sent to XXXXXXXX@gmail.com."
         android:textColor="@color/text_secondary"
         android:textSize="14sp"
         android:layout_marginTop="8dp" />

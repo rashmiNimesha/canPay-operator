@@ -4,23 +4,24 @@
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    android:padding="12dp">
+    android:padding="17dp">
 
     <TextView
         android:id="@+id/tv_description"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="35dp"
         android:text="Payment Received"
         android:textStyle="bold"
-        android:textSize="16sp"/>
+        android:textSize="15sp"
+        android:textColor="#181616"/>
 
     <TextView
         android:id="@+id/tv_date"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="20dp"
         android:text="Nov 18, 2024"
         android:textSize="12sp"
-        android:textColor="#12122EE5"/>
+        android:textColor="#181616"/>
 
     <TextView
         android:id="@+id/tv_amount"
