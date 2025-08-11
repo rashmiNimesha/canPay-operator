@@ -3,8 +3,11 @@ package com.example.canpay_operator;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
+import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Vibrator;
+import android.provider.Settings;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
@@ -100,7 +103,11 @@ public class HomeActivity extends AppCompatActivity {
                             if (currentFragment instanceof HomeAssignedFragment) {
                                 runOnUiThread(() -> ((HomeAssignedFragment) currentFragment).refreshTransactions());
                             }
-                            showNotification("Payment received: " + passengerName + " LKR " + amount);
+                            // Vibrate and play sound for user feedback
+                            runOnUiThread(() -> {
+                                vibrateAndPlaySound();
+                                showNotification("Payment received: " + passengerName + " LKR " + amount);
+                            });
                         } catch (Exception e) {
                             logger.error("Error processing MQTT message: " + e.getMessage(), e);
                         }
@@ -168,6 +175,27 @@ public class HomeActivity extends AppCompatActivity {
                 .commit();
     }
 
+    // Add this method for vibration and sound
+    private void vibrateAndPlaySound() {
+        try {
+            Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
+            if (vibrator != null && vibrator.hasVibrator()) {
+                vibrator.vibrate(new long[]{0, 300, 100, 300}, -1);
+            }
+        } catch (Exception e) {
+            logger.warn("Vibration failed: " + e.getMessage());
+        }
+        try {
+            MediaPlayer mp = MediaPlayer.create(this, Settings.System.DEFAULT_NOTIFICATION_URI);
+            if (mp != null) {
+                mp.setOnCompletionListener(MediaPlayer::release);
+                mp.start();
+            }
+        } catch (Exception e) {
+            logger.warn("Sound playback failed: " + e.getMessage());
+        }
+    }
+
     private void showNotification(String message) {
         String channelId = "payment_notifications";
         int notificationId = (int) System.currentTimeMillis();
@@ -177,8 +205,11 @@ public class HomeActivity extends AppCompatActivity {
             NotificationChannel channel = new NotificationChannel(
                     channelId,
                     "Payment Notifications",
-                    NotificationManager.IMPORTANCE_DEFAULT
+                    NotificationManager.IMPORTANCE_HIGH
             );
+            channel.enableVibration(true);
+            channel.setVibrationPattern(new long[]{0, 500, 200, 500});
+            channel.setSound(Settings.System.DEFAULT_NOTIFICATION_URI, null);
             notificationManager.createNotificationChannel(channel);
         }
 
@@ -186,11 +217,14 @@ public class HomeActivity extends AppCompatActivity {
                 .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle("New Payment")
                 .setContentText(message)
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .setAutoCancel(true);
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true)
+                .setVibrate(new long[]{0, 500, 200, 500})
+                .setSound(Settings.System.DEFAULT_NOTIFICATION_URI);
 
         notificationManager.notify(notificationId, builder.build());
     }
+
 
     @Override
     protected void onDestroy() {
