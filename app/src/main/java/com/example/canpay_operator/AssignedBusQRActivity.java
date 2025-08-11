@@ -18,8 +18,13 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.canpay_operator.utils.ApiHelper;
+import com.example.canpay_operator.utils.Endpoints;
+import com.example.canpay_operator.utils.PreferenceManager;
 import com.google.zxing.BarcodeFormat;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
+
+import org.json.JSONObject;
 
 public class AssignedBusQRActivity extends AppCompatActivity {
 
@@ -64,7 +69,7 @@ public class AssignedBusQRActivity extends AppCompatActivity {
 
         if (operatorId == null || operatorId.isEmpty()) {
             Log.e(TAG, "Operator ID not found in SharedPreferences.");
-            Toast.makeText(this, "Operator ID not available. Cannot generate QR.", Toast.LENGTH_LONG).show();
+         //   Toast.makeText(this, "Operator ID not available. Cannot generate QR.", Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -93,13 +98,47 @@ public class AssignedBusQRActivity extends AppCompatActivity {
 
         btnUnassign.setOnClickListener(v -> {
             dialog.dismiss();
-            // Perform your unassign / logout action here:
-            Toast.makeText(this, "You have been unassigned from the bus.", Toast.LENGTH_SHORT).show();
+            // --- API Integration Start ---
+            String operatorId = PreferenceManager.getUserId(this);
+            String busId = PreferenceManager.getBusID(this);
+            String token = PreferenceManager.getToken(this);
 
-            // For example, navigate to HomeUnassignedFragment
-            Intent intent = new Intent(this, HomeUnassignedFragment.class);
-            startActivity(intent);
-            finish(); // Close this QR activity
+            if (operatorId == null || busId == null || token == null) {
+                Toast.makeText(this, "Missing operator or bus info.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            try {
+                JSONObject body = new JSONObject();
+                body.put("operatorId", operatorId);
+                body.put("busId", busId);
+
+                // Use POST instead of DELETE
+                ApiHelper.postJson(this, Endpoints.UNASSIGNED_BUS, body, token, new ApiHelper.Callback() {
+                    @Override
+                    public void onSuccess(JSONObject response) {
+                        // Clear bus info from preferences
+                        PreferenceManager.setBusNumber(AssignedBusQRActivity.this, null);
+                        PreferenceManager.setBusID(AssignedBusQRActivity.this, null);
+
+                        Toast.makeText(AssignedBusQRActivity.this, "You have been unassigned from the bus.", Toast.LENGTH_SHORT).show();
+
+                        // Navigate to HomeUnassignedFragment or appropriate screen
+                        Intent intent = new Intent(AssignedBusQRActivity.this, HomeActivity.class);
+                        intent.putExtra("showUnassigned", true);
+                        startActivity(intent);
+                        finish();
+                    }
+
+                    @Override
+                    public void onError(com.android.volley.VolleyError error) {
+                        ApiHelper.handleVolleyError(AssignedBusQRActivity.this, error, TAG);
+                    }
+                });
+            } catch (Exception e) {
+                Toast.makeText(this, "Error preparing unassign request.", Toast.LENGTH_SHORT).show();
+            }
+            // --- API Integration End ---
         });
 
         btnCancel.setOnClickListener(v -> dialog.dismiss());
