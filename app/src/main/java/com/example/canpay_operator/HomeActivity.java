@@ -1,13 +1,18 @@
 package com.example.canpay_operator;
 
+import android.Manifest;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.Context;
-import android.media.MediaPlayer;
+import android.content.pm.PackageManager;
+import android.media.AudioAttributes;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.VibrationEffect;
 import android.os.Vibrator;
-import android.provider.Settings;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
@@ -15,7 +20,6 @@ import androidx.fragment.app.Fragment;
 
 import com.android.volley.VolleyError;
 import com.example.canpay_operator.config.HiveMqttManager;
-
 import com.example.canpay_operator.utils.ApiHelper;
 import com.example.canpay_operator.utils.Endpoints;
 import com.example.canpay_operator.utils.NotificationStore;
@@ -28,6 +32,10 @@ import org.slf4j.LoggerFactory;
 
 public class HomeActivity extends AppCompatActivity {
     private static final Logger logger = LoggerFactory.getLogger(HomeActivity.class);
+
+    private static final String PAYMENT_CHANNEL_ID = "payment_notifications_v2"; // new channel id
+    private static final int REQ_NOTIF_PERMISSION = 1001;
+
     private BottomNavigationView bottomNavigationView;
     private HiveMqttManager mqttManager;
 
@@ -37,6 +45,10 @@ public class HomeActivity extends AppCompatActivity {
         setContentView(R.layout.activity_home);
 
         bottomNavigationView = findViewById(R.id.bottom_nav);
+
+        // Create/update channel and ask runtime permission (Android 13+)
+        createPaymentChannel();
+        requestPostNotificationsPermissionIfNeeded();
 
         checkAssignmentStatus();
 
@@ -90,22 +102,20 @@ public class HomeActivity extends AppCompatActivity {
                             String amount = json.getString("amount");
                             String passengerName = json.optString("passengerName", "Passenger");
 
-                            // Remove TransactionStore usage, instead call API to refresh transactions
-                            // TransactionStore.addTransaction(getApplicationContext(), transaction);
-
-                            // Store notification in NotificationStore
+                            // Store notification locally (for in-app list)
                             NotificationStore.getInstance(getApplicationContext()).addNotification(
-                                "Payment received: " + passengerName + " LKR " + amount
+                                    "Payment received: " + passengerName + " LKR " + amount
                             );
 
-                            // Call API to refresh transactions in HomeAssignedFragment
+                            // If HomeAssignedFragment visible, refresh its transactions
                             Fragment currentFragment = getSupportFragmentManager().findFragmentById(R.id.fragment_container);
                             if (currentFragment instanceof HomeAssignedFragment) {
                                 runOnUiThread(() -> ((HomeAssignedFragment) currentFragment).refreshTransactions());
                             }
-                            // Vibrate and play sound for user feedback
+
+                            // Immediate strong haptic + system notification with default sound
                             runOnUiThread(() -> {
-                                vibrateAndPlaySound();
+                                strongVibrateNow();
                                 showNotification("Payment received: " + passengerName + " LKR " + amount);
                             });
                         } catch (Exception e) {
@@ -117,10 +127,10 @@ public class HomeActivity extends AppCompatActivity {
                 throwable -> logger.error("MQTT connection failed: " + throwable.getMessage(), throwable)
         );
 
-        // Add a delayed log to check if no message is received after 30 seconds
-        new android.os.Handler().postDelayed(() -> {
+        // Delayed log to help debug if nothing arrives
+        new Handler().postDelayed(() -> {
             logger.warn("No MQTT message received after 30 seconds. Check topic, broker, and backend publishing.");
-        }, 30000);
+        }, 30_000);
     }
 
     private void checkAssignmentStatus() {
@@ -150,7 +160,6 @@ public class HomeActivity extends AppCompatActivity {
                                 PreferenceManager.setBusID(HomeActivity.this, busID);
                             }
                         }
-                        // Setup MQTT only if assigned
                         runOnUiThread(() -> setupMqttIfAssigned());
                     }
                 } else {
@@ -175,56 +184,96 @@ public class HomeActivity extends AppCompatActivity {
                 .commit();
     }
 
-    // Add this method for vibration and sound
-    private void vibrateAndPlaySound() {
+    /**
+     * Strong vibration using modern API (API 26+), simple fallback pre-26.
+     */
+    private void strongVibrateNow() {
         try {
             Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-            if (vibrator != null && vibrator.hasVibrator()) {
-                vibrator.vibrate(new long[]{0, 300, 100, 300}, -1);
+            if (vibrator == null || !vibrator.hasVibrator()) return;
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                vibrator.vibrate(VibrationEffect.createOneShot(
+                        700, VibrationEffect.DEFAULT_AMPLITUDE)); // ~0.7s strong buzz
+            } else {
+                vibrator.vibrate(700);
             }
         } catch (Exception e) {
             logger.warn("Vibration failed: " + e.getMessage());
         }
-        try {
-            MediaPlayer mp = MediaPlayer.create(this, Settings.System.DEFAULT_NOTIFICATION_URI);
-            if (mp != null) {
-                mp.setOnCompletionListener(MediaPlayer::release);
-                mp.start();
-            }
-        } catch (Exception e) {
-            logger.warn("Sound playback failed: " + e.getMessage());
-        }
     }
 
+    /**
+     * Posts a notification. On O+ the sound/vibration are defined by the channel.
+     * On pre-O devices we set defaults directly on the Builder.
+     */
     private void showNotification(String message) {
-        String channelId = "payment_notifications";
-        int notificationId = (int) System.currentTimeMillis();
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        String channelId = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+                ? PAYMENT_CHANNEL_ID
+                : ""; // ignored pre-O
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                    channelId,
-                    "Payment Notifications",
-                    NotificationManager.IMPORTANCE_HIGH
-            );
-            channel.enableVibration(true);
-            channel.setVibrationPattern(new long[]{0, 500, 200, 500});
-            channel.setSound(Settings.System.DEFAULT_NOTIFICATION_URI, null);
-            notificationManager.createNotificationChannel(channel);
-        }
+        NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, channelId)
                 .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle("New Payment")
                 .setContentText(message)
-                .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true)
-                .setVibrate(new long[]{0, 500, 200, 500})
-                .setSound(Settings.System.DEFAULT_NOTIFICATION_URI);
+                .setPriority(NotificationCompat.PRIORITY_HIGH); // affects <26
 
-        notificationManager.notify(notificationId, builder.build());
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            // Pre-O: ask for default sound + vibrate
+            builder.setDefaults(NotificationCompat.DEFAULT_ALL);
+            builder.setVibrate(new long[]{0, 600, 150, 700});
+            builder.setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
+        }
+
+        nm.notify((int) System.currentTimeMillis(), builder.build());
     }
 
+    /**
+     * Create a channel that uses the user's default notification sound and strong vibration.
+     * If an older channel existed with different settings, delete it so new settings take effect.
+     */
+    private void createPaymentChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            try {
+                // Remove legacy channel if present so new config applies
+                nm.deleteNotificationChannel("payment_notifications");
+            } catch (Exception ignored) {}
+
+            NotificationChannel channel = new NotificationChannel(
+                    PAYMENT_CHANNEL_ID,
+                    "Payment Notifications",
+                    NotificationManager.IMPORTANCE_HIGH // plays sound
+            );
+
+            channel.enableVibration(true);
+            channel.setVibrationPattern(new long[]{0, 600, 150, 700});
+
+            Uri defaultSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+            AudioAttributes attrs = new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_NOTIFICATION)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                    .build();
+            channel.setSound(defaultSound, attrs);
+
+            nm.createNotificationChannel(channel);
+        }
+    }
+
+    /**
+     * Android 13+ needs runtime permission to post notifications.
+     */
+    private void requestPostNotificationsPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, REQ_NOTIF_PERMISSION);
+            }
+        }
+    }
 
     @Override
     protected void onDestroy() {
