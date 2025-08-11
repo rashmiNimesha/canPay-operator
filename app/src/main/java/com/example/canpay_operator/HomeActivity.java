@@ -33,7 +33,8 @@ import org.slf4j.LoggerFactory;
 public class HomeActivity extends AppCompatActivity {
     private static final Logger logger = LoggerFactory.getLogger(HomeActivity.class);
 
-    private static final String PAYMENT_CHANNEL_ID = "payment_notifications_v2"; // new channel id
+    // New channel ID so Android 8+ devices (incl. Android 11) pick up sound settings
+    private static final String PAYMENT_CHANNEL_ID = "payment_notifications_v3";
     private static final int REQ_NOTIF_PERMISSION = 1001;
 
     private BottomNavigationView bottomNavigationView;
@@ -46,7 +47,7 @@ public class HomeActivity extends AppCompatActivity {
 
         bottomNavigationView = findViewById(R.id.bottom_nav);
 
-        // Create/update channel and ask runtime permission (Android 13+)
+        // Create channel and request runtime notification permission (Android 13+)
         createPaymentChannel();
         requestPostNotificationsPermissionIfNeeded();
 
@@ -113,7 +114,7 @@ public class HomeActivity extends AppCompatActivity {
                                 runOnUiThread(() -> ((HomeAssignedFragment) currentFragment).refreshTransactions());
                             }
 
-                            // Immediate strong haptic + system notification with default sound
+                            // Strong haptic + system notification with default sound
                             runOnUiThread(() -> {
                                 strongVibrateNow();
                                 showNotification("Payment received: " + passengerName + " LKR " + amount);
@@ -160,13 +161,16 @@ public class HomeActivity extends AppCompatActivity {
                                 PreferenceManager.setBusID(HomeActivity.this, busID);
                             }
                         }
-                        runOnUiThread(() -> setupMqttIfAssigned());
+                        runOnUiThread(this::setupMqttAfterAssigned);
                     }
                 } else {
                     assigned = false;
                 }
                 runOnUiThread(() -> loadHomeFragment(assigned));
             }
+
+            // helper to satisfy method reference above
+            private void setupMqttAfterAssigned() { setupMqttIfAssigned(); }
 
             @Override
             public void onError(VolleyError error) {
@@ -219,7 +223,8 @@ public class HomeActivity extends AppCompatActivity {
                 .setContentTitle("New Payment")
                 .setContentText(message)
                 .setAutoCancel(true)
-                .setPriority(NotificationCompat.PRIORITY_HIGH); // affects <26
+                .setPriority(NotificationCompat.PRIORITY_HIGH) // affects <26
+                .setCategory(NotificationCompat.CATEGORY_MESSAGE);
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             // Pre-O: ask for default sound + vibrate
@@ -233,15 +238,13 @@ public class HomeActivity extends AppCompatActivity {
 
     /**
      * Create a channel that uses the user's default notification sound and strong vibration.
-     * If an older channel existed with different settings, delete it so new settings take effect.
+     * If older channels existed with different settings, delete them so new settings take effect.
      */
     private void createPaymentChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationManager nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            try {
-                // Remove legacy channel if present so new config applies
-                nm.deleteNotificationChannel("payment_notifications");
-            } catch (Exception ignored) {}
+            try { nm.deleteNotificationChannel("payment_notifications"); } catch (Exception ignored) {}
+            try { nm.deleteNotificationChannel("payment_notifications_v2"); } catch (Exception ignored) {}
 
             NotificationChannel channel = new NotificationChannel(
                     PAYMENT_CHANNEL_ID,
