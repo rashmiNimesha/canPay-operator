@@ -1,52 +1,259 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="horizontal"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="64dp"
-    android:background="@drawable/rounded_white_bg"
-    android:padding="12dp"
-    android:layout_marginBottom="12dp"
-    android:gravity="center_vertical">
-
-    <ImageView
-        android:id="@+id/iv_notification_icon"
-        android:layout_width="32dp"
-        android:layout_height="32dp"
-        android:src="@drawable/ic_arrow_green"
-        android:background="@drawable/circle_white_background"
-        android:contentDescription="@null"
-        android:layout_marginEnd="12dp"/>
+    android:layout_height="match_parent"
+    android:padding="16dp">
 
     <LinearLayout
         android:orientation="vertical"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_weight="1">
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
-        <TextView
-            android:id="@+id/tv_notification_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Payment Received"
-            android:textStyle="bold"
-            android:textSize="15sp"
-            android:textColor="#23233C"/>
+        <!-- Notification 1 -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="70dp"
+            android:background="@drawable/rounded_white_bg"
+            android:padding="12dp"
+            android:layout_marginBottom="12dp"
+            android:gravity="center_vertical">
 
-        <TextView
-            android:id="@+id/tv_notification_date"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Nov 18, 2024"
-            android:textSize="13sp"
-            android:textColor="#888888"
-            android:layout_marginTop="2dp"/>
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_notification"
+                android:background="@drawable/circle_white_background"
+                android:layout_marginEnd="12dp"
+                android:contentDescription="@null" />
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="1">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="System maintenance scheduled at 11 PM."
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:textColor="#23233C" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="14dp"
+                    android:text="Aug 11, 2025"
+                    android:textSize="9sp"
+                    android:textColor="#353434"
+                    android:layout_marginTop="1dp" />
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:src="@drawable/ic_blue_dot"
+                android:layout_marginStart="8dp"
+                android:contentDescription="@null" />
+        </LinearLayout>
+
+        <!-- Notification 2 -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="72dp"
+            android:background="@drawable/rounded_white_bg"
+            android:padding="12dp"
+            android:layout_marginBottom="12dp"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_notification"
+                android:background="@drawable/circle_white_background"
+                android:layout_marginEnd="12dp"
+                android:contentDescription="@null" />
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="1">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="New training material available."
+                    android:textStyle="bold"
+                    android:textSize="15sp"
+                    android:textColor="#23233C" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="14dp"
+                    android:text="Aug 10, 2025"
+                    android:textSize="9sp"
+                    android:textColor="#353434"
+                    android:layout_marginTop="1dp" />
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:src="@drawable/ic_blue_dot"
+                android:layout_marginStart="8dp"
+                android:contentDescription="@null" />
+        </LinearLayout>
+
+        <!-- Notification 3 -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="70dp"
+            android:background="@drawable/rounded_white_bg"
+            android:padding="12dp"
+            android:layout_marginBottom="12dp"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_notification"
+                android:background="@drawable/circle_white_background"
+                android:layout_marginEnd="12dp"
+                android:contentDescription="@null" />
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="0dp"
+                android:layout_height="50dp"
+                android:layout_weight="1">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="New announcement from management."
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:textColor="#23233C" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="14dp"
+                    android:text="Aug 11, 2025"
+                    android:textSize="9sp"
+                    android:textColor="#353434"
+                    android:layout_marginTop="1dp" />
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:src="@drawable/ic_blue_dot"
+                android:layout_marginStart="8dp"
+                android:contentDescription="@null" />
+        </LinearLayout>
+
+        <!-- Notification 4 -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="70dp"
+            android:background="@drawable/rounded_white_bg"
+            android:padding="12dp"
+            android:layout_marginBottom="12dp"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_notification"
+                android:background="@drawable/circle_white_background"
+                android:layout_marginEnd="12dp"
+                android:contentDescription="@null" />
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Account security was updated."
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:textColor="#23233C" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="14dp"
+                    android:text="Aug 11, 2025"
+                    android:textSize="9sp"
+                    android:textColor="#353434"
+                    android:layout_marginTop="1dp" />
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:src="@drawable/ic_blue_dot"
+                android:layout_marginStart="8dp"
+                android:contentDescription="@null" />
+        </LinearLayout>
+
+        <!-- Notification 5 -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="64dp"
+            android:background="@drawable/rounded_white_bg"
+            android:padding="12dp"
+            android:layout_marginBottom="12dp"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_notification"
+                android:background="@drawable/circle_white_background"
+                android:layout_marginEnd="12dp"
+                android:contentDescription="@null" />
+
+            <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Data synced successfully."
+                    android:textStyle="bold"
+                    android:textSize="14sp"
+                    android:textColor="#23233C" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="14dp"
+                    android:text="Aug 11, 2025"
+                    android:textSize="9sp"
+                    android:textColor="#353434"
+                    android:layout_marginTop="1dp" />
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:src="@drawable/ic_blue_dot"
+                android:layout_marginStart="8dp"
+                android:contentDescription="@null" />
+        </LinearLayout>
+
     </LinearLayout>
 
-    <ImageView
-        android:id="@+id/iv_unread_dot"
-        android:layout_width="10dp"
-        android:layout_height="10dp"
-        android:src="@drawable/ic_blue_dot"
-        android:layout_marginStart="8dp"
-        android:contentDescription="@null"/>
-</LinearLayout>
+</ScrollView>
