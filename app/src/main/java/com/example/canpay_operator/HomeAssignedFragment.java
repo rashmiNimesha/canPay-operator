@@ -1,7 +1,7 @@
 package com.example.canpay_operator;
 
-import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,7 +34,10 @@ public class HomeAssignedFragment extends Fragment {
     private LinearLayout layoutNoTransactions;
     private TransactionAdapter transactionAdapter;
     private List<Transaction> transactions;
-    private static final String PREFS_NAME = "CanpayPrefs";
+
+    private Handler handler = new Handler();
+    private Runnable refreshRunnable;
+    private static final int REFRESH_INTERVAL = 2000; // 2 seconds
 
     public HomeAssignedFragment() {
         // Required empty public constructor
@@ -58,7 +61,7 @@ public class HomeAssignedFragment extends Fragment {
         rvTransactions = view.findViewById(R.id.rv_transactions);
         layoutNoTransactions = view.findViewById(R.id.layout_no_transactions);
 
-        // 🟢 Connected message logic
+        // Connected message logic
         TextView tvConnectionMessage = view.findViewById(R.id.tv_connection_message);
         String busNumber = PreferenceManager.getBusNumber(requireContext());
         if (busNumber != null && !busNumber.isEmpty()) {
@@ -73,10 +76,43 @@ public class HomeAssignedFragment extends Fragment {
         rvTransactions.setLayoutManager(new LinearLayoutManager(getContext()));
         rvTransactions.setAdapter(transactionAdapter);
 
-        // Replace TransactionStore with API call
+        // Initial data fetch
         fetchTransactions();
-
         fetchAndDisplayEarnings();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Start auto-refresh
+        startAutoRefresh();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        // Stop auto-refresh to avoid leaks when fragment not visible
+        stopAutoRefresh();
+    }
+
+    private void startAutoRefresh() {
+        if (refreshRunnable == null) {
+            refreshRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    fetchTransactions();
+                    fetchAndDisplayEarnings();
+                    handler.postDelayed(this, REFRESH_INTERVAL);
+                }
+            };
+        }
+        handler.post(refreshRunnable);
+    }
+
+    private void stopAutoRefresh() {
+        if (refreshRunnable != null) {
+            handler.removeCallbacks(refreshRunnable);
+        }
     }
 
     private void fetchTransactions() {
@@ -141,10 +177,6 @@ public class HomeAssignedFragment extends Fragment {
         });
     }
 
-    public void refreshTransactions() {
-        fetchTransactions();
-    }
-
     private void fetchAndDisplayEarnings() {
         String name = PreferenceManager.getUserName(requireContext());
         String busID = PreferenceManager.getBusID(requireContext());
@@ -154,32 +186,23 @@ public class HomeAssignedFragment extends Fragment {
 
         tvName.setText(name);
         tvBusNumber.setText(busNumber);
-        transactions.addAll(loadTransactions());
 
         if (operatorId == null || busID == null || token == null) {
             tvEarnings.setText("LKR 0.00");
             return;
         }
 
-        if (transactions.isEmpty()) {
-            layoutNoTransactions.setVisibility(View.VISIBLE);
-            rvTransactions.setVisibility(View.GONE);
-        } else {
-            layoutNoTransactions.setVisibility(View.GONE);
-            rvTransactions.setVisibility(View.VISIBLE);
-        }
-
         String endpoint = Endpoints.GET_OPERATOR_FINANCE_DETAILS + "?busId=" + busID + "&operatorId=" + operatorId;
 
-        com.example.canpay_operator.utils.ApiHelper.getJson(
+        ApiHelper.getJson(
                 requireContext(),
                 endpoint,
                 token,
-                new com.example.canpay_operator.utils.ApiHelper.Callback() {
+                new ApiHelper.Callback() {
                     @Override
-                    public void onSuccess(org.json.JSONObject response) {
+                    public void onSuccess(JSONObject response) {
                         if (response.optBoolean("success")) {
-                            org.json.JSONObject data = response.optJSONObject("data");
+                            JSONObject data = response.optJSONObject("data");
                             if (data != null) {
                                 double earnings = data.optDouble("earningsAmount", 0.0);
                                 tvEarnings.setText(String.format("LKR %,.2f", earnings));
@@ -188,16 +211,17 @@ public class HomeAssignedFragment extends Fragment {
                     }
 
                     @Override
-                    public void onError(com.android.volley.VolleyError error) {
+                    public void onError(VolleyError error) {
                         tvEarnings.setText("LKR 0.00");
-                        com.example.canpay_operator.utils.ApiHelper.handleVolleyError(requireContext(), error, "EARNINGS");
+                        ApiHelper.handleVolleyError(requireContext(), error, "EARNINGS");
                     }
                 }
         );
     }
 
-    private List<Transaction> loadTransactions() {
-        // Remove hardcoded transactions, now fetched from API
-        return new ArrayList<>();
+    //  TO ALLOW EXTERNAL REFRESH CALLS --->
+    public void refreshTransactions() {
+        fetchTransactions();
+        fetchAndDisplayEarnings();
     }
 }
